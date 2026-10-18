@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Control de playa</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f5f7;--card:#fff;--tx:#14181f;--mut:#6b7380;--bd:#d9dde3;--c:#1f9d55;--cb:#d9f3e4;--f:#d93636;--fb:#fde0e0;--s:#d97706;--sb:#fdebd0;--n:#f5c518;--ac:#1d4ed8}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101318;--card:#1a1f27;--tx:#eef1f5;--mut:#98a1ae;--bd:#2d3540;--cb:#12301f;--fb:#3b1717;--sb:#3a2a0f;--c:#3ecf7a;--f:#ff6b6b;--s:#ffb347;--ac:#6b9bff}}
+:root[data-theme="dark"]{--bg:#101318;--card:#1a1f27;--tx:#eef1f5;--mut:#98a1ae;--bd:#2d3540;--cb:#12301f;--fb:#3b1717;--sb:#3a2a0f;--c:#3ecf7a;--f:#ff6b6b;--s:#ffb347;--ac:#6b9bff}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:10px 12px 6px;z-index:5;border-bottom:1px solid var(--bd)}
+.row{display:flex;gap:8px;align-items:center}
+.mic{flex:1;border:0;border-radius:14px;padding:16px;font-size:18px;font-weight:700;background:var(--ac);color:#fff}
+.mic.on{background:var(--f);animation:p 1s infinite}@keyframes p{50%{opacity:.7}}
+input[type=text],textarea{width:100%;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:10px;font-size:16px}
+button{font:inherit}.btn{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 12px;font-size:14px}
+.btn.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+.stats{display:flex;gap:6px;margin:8px 0 6px;font-size:13px}
+.stats span{flex:1;text-align:center;border-radius:8px;padding:5px 2px;font-weight:600}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.tab{white-space:nowrap;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font-size:13px}
+.tab.a{background:var(--tx);color:var(--bg)}
+main{padding:8px 12px 170px}.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.opts .btn{padding:14px 8px;font-size:15px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.top b{font-size:16px}.chip.L{border-style:dashed;border-width:3px;padding:9px 5px}.chip.L:not(.C):not(.F):not(.S){border-color:var(--mut)}
+h3{margin:14px 0 6px;font-size:14px;color:var(--mut)}
+.grid{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-width:68px;padding:10px 6px;border-radius:10px;border:2px solid var(--bd);background:var(--card);font-size:17px;font-weight:700;text-align:center;color:var(--tx);position:relative}
+.chip small{display:block;font-size:10px;font-weight:600;opacity:.8}
+.chip.C{background:var(--cb);border-color:var(--c)}.chip.F{background:var(--fb);border-color:var(--f)}.chip.S{background:var(--sb);border-color:var(--s)}
+.chip.N{box-shadow:0 0 0 3px var(--n)}
+.chip.N::after{content:"NUEVO";position:absolute;top:-8px;right:-4px;background:var(--n);color:#000;font-size:9px;font-weight:800;border-radius:6px;padding:1px 4px}
+.msg{font-size:13px;color:var(--mut);margin:6px 0;min-height:18px}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--bd);display:flex;gap:8px}.bar .mic{flex:2}.bar .btn{flex:1}
+.bar .btn{flex:1}
+dialog{border:1px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);width:92%;max-width:480px}
+.leg{font-size:12px;color:var(--mut)}
+.fbar{display:flex;gap:8px;margin:6px 0 4px}.fb{flex:1;border:2px solid var(--bd);border-radius:12px;padding:11px 4px;font-size:15px;font-weight:700;color:var(--tx);background:var(--card)}.fb.C{background:var(--cb);border-color:var(--c)}.fb.F{background:var(--fb);border-color:var(--f)}.fb.a{box-shadow:0 0 0 3px var(--tx)}.fb b{font-size:17px}
+</style></head><body>
+<header>
+ <div class="top"><b>🚌 Control de playa</b><span class="row"><button class="btn" id="cfg">⚙️</button><button class="btn" id="clean">🧹 Limpiar</button></span></div>
+ <div class="row"><input type="text" id="txt" placeholder="Escribí o dictá: 1834 1832 cargados 1833 falta" enterkeyhint="send"><button class="btn pri" id="add">OK</button></div>
+ <div class="msg" id="msg"></div>
+ <div class="fbar" id="fbar"></div>
+</header>
+<main id="main"></main>
+<div class="bar"><button class="mic" id="mic">🎤 Grabar</button><button class="btn" id="done">✅ Ya los pasé</button></div>
+<dialog id="dlg2"><b id="d2t"></b><div class="leg" id="d2s"></div><div class="opts" id="d2o"></div><button class="btn" id="d2c" style="width:100%">Cerrar</button></dialog>
+<dialog id="dlg3"><p id="d3t" style="margin-top:0"></p><div class="row"><button class="btn pri" id="d3y">Sí, limpiar</button><button class="btn" id="d3n">Cancelar</button></div></dialog>
+<dialog id="dlg">
+ <b>Lista de internos</b>
+ <p class="leg">Una línea por renglón: <code>327: 1801 1802 1803</code>. Si no tenés lista, se van sumando solos al dictarlos.</p>
+ <textarea id="list" rows="7"></textarea>
+ <p class="leg">Tocá un interno para cambiar: sin dato → cargado → falta → se fue. <b>Mantené apretado</b> para marcar taller u otro predio.<br>Decí: "…cargados", "…falta cargar", "…se fueron", "…volvió", "…taller", "…otro predio".</p>
+ <div class="row" style="flex-wrap:wrap"><button class="btn pri" id="save">Guardar lista</button><button class="btn" id="reset">Borrar estados</button><button class="btn" id="close">Cerrar</button></div>
+</dialog>
+<script>
+var KEY='playa_v2',S={b:{},filter:'all'};
+try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}
+var SEED={"327":"2022 2023 2024 2025 2026 2027 2028 2029 2030 2031 2032 2033 2034 2035 2036 2037 2038 2039 2040 2041 2042 2043 2044 2045 2047 2048 2049 2050 2052 2053 2054 2055 2061 2062 2063 2065 2420 2421 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021","322":"2404 2405 2406 2407 2408 2409 2410 2412 2413 2414 2415 2416 2417 2418 2419 2422 2423 2424 2425 2426 2427 2428 2429 2430 2431 2436 2437 2064 2401 2402 2403","503":"4017 4018 4019 4020 4021 4022 4023 4024 4025 4026 4027 4028 4029 4030 4031 4032 4033 4034 4035 4036 4037 4038 4040 4041 4042 4043 4044 4045 4046 4047 4048 4049 4052 4053 4054 4055 4056 4057 4058 4059 4060 4062 4063 4064 4065 4066 4067 4068 4069 4070 4071 4072 4073 4074 4075 4076 4078 4079 4081 4082 4085 4090 4092 4093 4095 4097","302":"1801 1802 1803 1804 1805 1806 1807 1808 1809 1810 1811 1812 1813 1815 1816 1817 1818 1819 1820 1821 1822 1823 1824 1825 1826 1827 1828 1829 1830 1831 1832 1833 1834 1835 1836 1837 1838 1839 1840","136":"1419 2505 2515 2526 2527 2551 2552 2553 2561 2562 2563 2564 2565 2566 2567 2568 2569 2570 2571 2572 2573 2574 2575 2577 2578 2579 2580","Sin asignar":"2438 2439 2440 2441 2442 2443 2444 2445 2446 2447 2448 2449 2450"};function seedAll(){S.b={};Object.keys(SEED).forEach(function(l){SEED[l].split(' ').forEach(function(n){S.b[n]={line:l}})})}
+if(!Object.keys(S.b).length)seedAll();
+if(['all','C','F'].indexOf(S.filter)<0)S.filter='all';
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var NAMES={C:'cargado',F:'falta',S:'se fue'};
+function $(i){return document.getElementById(i)}
+function setSt(n,st,v){var o=S.b[n]||(S.b[n]={line:'Sin línea'});if(st==='T'||st==='P')o.loc=st;else{o.st=st;if(v)delete o.loc}o.new=true;o.ts=Date.now()}
+var BAD=[],auto=false,tmr=null;
+function kbVoice(){auto=true;msg('Tocá el 🎤 del teclado y hablá. Se anota solo cuando termines.');$('txt').focus()}
+$('txt').addEventListener('input',function(){if(!auto)return;clearTimeout(tmr);tmr=setTimeout(function(){var v=$('txt').value.trim();if(v&&/\d/.test(v)){handle(v);$('txt').value=''}},1800)});
+$('txt').addEventListener('blur',function(){auto=false;clearTimeout(tmr)});
+function assemble(a){var ok=[],bad=[],acc='';
+ function flush(){if(acc){if(S.b[acc])ok.push(acc);else bad.push(acc);acc=''}}
+ a.forEach(function(t){
+  if(!acc&&S.b[t]){ok.push(t);return}
+  if(acc.length+t.length>4)flush();
+  if(!acc&&S.b[t]){ok.push(t);return}
+  acc+=t;if(acc.length===4)flush()});
+ flush();return{ok:ok,bad:bad}}
+function parse(t){BAD=[];
+ t=t.toLowerCase().replace(/(\d)\.(?=\d)/g,'$1');
+ var re=/\d{1,5}|cargad\w*|falta\w*|pendiente\w*|se fue\w*|fueron|fue|sali\w*|volvi\w*|taller\w*|predio\w*/g,m,pend=[],mode=null,pre=false,done=[];
+ function ap(a,st,v){var r=assemble(a);r.ok.forEach(function(n){setSt(n,st,v);done.push(n)});r.bad.forEach(function(n){BAD.push(n)})}
+ while((m=re.exec(t))){var w=m[0],st=null;
+  if(/^\d/.test(w)){pend.push(w);continue}
+  if(/^cargad/.test(w))st='C';else if(/^(falta|pendiente)/.test(w))st='F';else if(/^volvi/.test(w))st='V';else if(/^taller/.test(w))st='T';else if(/^predio/.test(w))st='P';else st='S';
+  if(pend.length){ap(pend,st==='V'?'F':st,st==='V');pend=[];mode=st;pre=false}else{mode=st;pre=true}
+ }
+ if(pend.length&&mode&&pre)ap(pend,mode==='V'?'F':mode,mode==='V');
+ return done}
+function msg(t){$('msg').textContent=t}
+function handle(t){var d=parse(t),b=BAD.length?'Sin coincidencia en la lista: '+BAD.join(', ')+'. Si es un coche nuevo, agregalo en ⚙️.':'';
+ if(d.length){msg('✔ '+d.length+' anotados: '+d.join(', ')+(b?' · '+b:''));save();render()}else msg(b||'No entendí números en: "'+t+'"')}
+$('add').onclick=function(){var v=$('txt').value.trim();if(v){handle(v);$('txt').value=''}};
+$('txt').onkeydown=function(e){if(e.key==='Enter')$('add').click()};
+var CAP=(function(){try{var c=window.parent&&window.parent.Capacitor||window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()?c:null}catch(e){return null}})();
+var NSR=CAP&&CAP.Plugins&&CAP.Plugins.SpeechRecognition,buf='';
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,on=false;
+var STATUS=/cargad|falta|pendiente|se fue|fueron|volvi|taller|predio|sali/;
+function nativeStop(){on=false;buf='';ui();try{NSR.stop()}catch(e){}}
+async function nativeLoop(){
+ try{var pr=await NSR.checkPermissions();if(pr.speechRecognition!=='granted')pr=await NSR.requestPermissions();
+  if(pr.speechRecognition!=='granted'){msg('Falta el permiso de micrófono. Activalo en Ajustes del celular > Aplicaciones > Playa > Permisos.');return}
+  var av=await NSR.available();if(!av.available){msg('Este celular no tiene reconocimiento de voz. Instalá/actualizá la app "Google" desde Play Store.');return}
+ }catch(e){msg('No se pudo preparar el micrófono: '+(e.message||e));return}
+ on=true;ui();msg('🎤 Escuchando… hablá y decí "cargados" o "falta" al final.');
+ var fails=0;
+ while(on){
+  try{
+   var r=await NSR.start({language:'es-AR',maxResults:1,partialResults:false,popup:false});
+   fails=0;
+   var t=(r&&r.matches&&r.matches[0])||'';
+   if(t){buf=(buf+' '+t).trim();
+    if(STATUS.test(buf.toLowerCase())){var b=buf;buf='';handle(b)}
+    else msg('Escuché: "'+buf+'" · falta decir cargados / falta / se fue');}
+  }catch(e){
+   var m=String(e&&e.message||e);
+   if(/no match|no speech|didn.t understand|busy|client side/i.test(m)){await new Promise(function(z){setTimeout(z,250)});continue}
+   fails++;
+   if(fails>=3||/permission|not available|network|server/i.test(m)){on=false;ui();
+    msg(/network|server/i.test(m)?'Sin conexión para el reconocimiento de voz. Revisá internet o descargá el idioma español offline en Ajustes de Google.':'Micrófono no disponible ('+m+'). Usá el campo de texto.');return}
+   await new Promise(function(z){setTimeout(z,400)});
+  }
+ }
+ ui()}
+$('mic').onclick=function(){
+ if(NSR){if(on){nativeStop()}else{nativeLoop()}return}
+ if(!SR){kbVoice();return}
+ if(on){on=false;rec&&rec.stop();return}
+ rec=new SR();rec.lang='es-AR';rec.continuous=true;rec.interimResults=false;
+ rec.onresult=function(e){for(var i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)handle(e.results[i][0].transcript)};
+ rec.onerror=function(e){on=false;ui();msg('Micrófono no disponible ('+e.error+'). Usá el micrófono del teclado en el campo de texto.');$('txt').focus()};
+ rec.onend=function(){if(on){try{rec.start()}catch(x){}}else ui()};
+ try{rec.start();on=true;ui()}catch(x){msg('No se pudo iniciar el micrófono.')}};
+function ui(){var b=$('mic');b.className='mic'+(on?' on':'');b.textContent=on?'⏹ Escuchando…':'🎤 Grabar'}
+function render(){
+ var ks=Object.keys(S.b),c={C:0,F:0,S:0,N:0,X:0};
+ ks.forEach(function(k){var o=S.b[k];if(o.loc)c.X++;if(o.st)c[o.st]++;if(o.new)c.N++});
+ $('fbar').innerHTML=[['all','Todos',''],['C','✔ Cargados',c.C],['F','✖ Falta',c.F]].map(function(t){return '<button class="fb '+t[0]+(S.filter===t[0]?' a':'')+'" data-f="'+t[0]+'">'+t[1]+(t[2]!==''?' <b>'+t[2]+'</b>':'')+'</button>'}).join('');
+ Array.prototype.forEach.call($('fbar').children,function(b){b.onclick=function(){S.filter=b.dataset.f;save();render()}});
+ var g={};
+ ks.forEach(function(k){var o=S.b[k],f=S.filter;
+  if(f==='N'&&!o.new)return;if(f==='X'&&!o.loc)return;if(f==='U'&&o.st)return;if((f==='F'||f==='C'||f==='S')&&o.st!==f)return;
+  (g[o.line||'Sin línea']=g[o.line||'Sin línea']||[]).push(k)});
+ var h='';Object.keys(g).sort().forEach(function(l){
+  g[l].sort(function(a,b){return a-b});
+  h+='<h3>Línea '+l+' · '+g[l].length+'</h3><div class="grid">'+g[l].map(function(k){var o=S.b[k];
+   var lb=o.loc==='T'?'🔧 taller':o.loc==='P'?'📍 otro predio':(o.st?NAMES[o.st]:'—');return '<button class="chip '+(o.st||'')+(o.loc?' L':'')+(o.new?' N':'')+'" data-n="'+k+'">'+k+'<small>'+lb+'</small></button>'}).join('')+'</div>'});
+ $('main').innerHTML=h||'<p class="leg">Nada para mostrar. Cargá tu lista en ⚙️ o dictá internos.</p>';
+ Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(b){var tm=null,lp=false;
+  function clr(){clearTimeout(tm)}
+  b.addEventListener('pointerdown',function(){lp=false;clr();tm=setTimeout(function(){lp=true;openChip(b.dataset.n)},500)});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){b.addEventListener(ev,clr)});
+  b.addEventListener('contextmenu',function(e){e.preventDefault()});
+  b.onclick=function(){if(lp){lp=false;return}
+  var o=S.b[b.dataset.n],nx={'':'C',C:'F',F:'S',S:''}[o.st||''];
+  if(nx){setSt(b.dataset.n,nx)}else{o.st='';o.new=true;o.ts=Date.now()}save();render()}})}
+function openChip(n){var o=S.b[n];$('d2t').textContent='Interno '+n+' · línea '+o.line;
+ $('d2s').textContent='Ahora: '+(o.st?NAMES[o.st]:'sin dato')+(o.loc==='T'?' · en taller':o.loc==='P'?' · en otro predio':'');
+ var opts=[['T','🔧 En taller'],['P','📍 Otro predio'],['X','🅿️ En playa (quitar marca)']];
+ $('d2o').innerHTML=opts.map(function(x){return '<button class="btn" data-c="'+x[0]+'"'+(x[0]==='X'?' style="grid-column:span 2"':'')+'>'+x[1]+'</button>'}).join('');
+ Array.prototype.forEach.call($('d2o').children,function(bt){bt.onclick=function(){var c=bt.dataset.c;
+  if(c==='X')delete o.loc;else o.loc=c;
+  o.new=true;o.ts=Date.now();save();render();$('dlg2').close()}});
+ $('dlg2').showModal()}
+$('d2c').onclick=function(){$('dlg2').close()};
+function ask(t,fn){$('d3t').textContent=t;$('d3y').onclick=function(){$('dlg3').close();fn()};$('d3n').onclick=function(){$('dlg3').close()};$('dlg3').showModal()}
+$('clean').onclick=function(){ask('¿Dejar la planilla por defecto? Se borran estados, taller/predio y cambios de lista, y vuelve la lista original.',function(){seedAll();S.filter='all';save();render();msg('Planilla restaurada.')})};
+$('done').onclick=function(){Object.keys(S.b).forEach(function(k){S.b[k].new=false});save();render();msg('Resaltados borrados: ya están en la planilla.')};
+
+$('cfg').onclick=function(){var t='',g={};Object.keys(S.b).forEach(function(k){var l=S.b[k].line||'Sin línea';(g[l]=g[l]||[]).push(k)});
+ Object.keys(g).sort().forEach(function(l){t+=l+': '+g[l].sort(function(a,b){return a-b}).join(' ')+'\n'});$('list').value=t;$('dlg').showModal()};
+$('close').onclick=function(){$('dlg').close()};
+$('save').onclick=function(){var nb={};
+ $('list').value.split('\n').forEach(function(ln){var p=ln.split(':'),l=p.length>1?p[0].trim():'Sin línea',ns=(p.length>1?p[1]:p[0]).match(/\d{1,5}/g)||[];
+  ns.forEach(function(n){nb[n]=S.b[n]||{};nb[n].line=l})});
+ Object.keys(S.b).forEach(function(k){if(nb[k]){nb[k].st=S.b[k].st;nb[k].new=S.b[k].new;nb[k].ts=S.b[k].ts;if(S.b[k].loc)nb[k].loc=S.b[k].loc}});S.b=nb;save();render();$('dlg').close()};
+$('reset').onclick=function(){$('dlg').close();ask('¿Borrar todos los estados y ubicaciones (empezar turno)? La lista queda igual.',function(){Object.keys(S.b).forEach(function(k){S.b[k].st='';S.b[k].new=false;delete S.b[k].loc});save();render()})};
+render();
+</script></body></html>

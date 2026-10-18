@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cierre nocturno</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cierre Exc.">
+<meta name="theme-color" content="#12161a">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2312161a'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#12161a; --panel:#1a2027; --line:#2a323b;
+  --ink:#e7e4da; --muted:#8b95a1;
+  --diesel:#d9a441; --diesel-dim:#8a6a2b;
+  --bad:#e0574a; --good:#4caf7d;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:20px 14px 40px; min-height:100%;
+}
+.wrap{max-width:480px; margin:0 auto}
+h1{font-size:1.15rem; font-weight:700; letter-spacing:.2px; margin:0 0 2px}
+.sub{color:var(--muted); font-size:.82rem; margin:0 0 20px}
+section{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:14px 16px; margin-bottom:14px;
+}
+h2{font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--diesel); margin:0 0 12px; font-weight:600}
+h3{font-size:.85rem; font-weight:600; margin:0 0 8px; padding-bottom:4px; border-bottom:1px solid var(--line)}
+.sub3{font-size:.7rem; color:var(--muted); margin:-8px 0 10px; text-transform:uppercase; letter-spacing:.06em}
+.blk{margin-bottom:14px}
+.blk:last-child{margin-bottom:0}
+.row{display:flex; gap:10px; margin-top:6px}
+.field{flex:1; min-width:0}
+label{display:block; font-size:.72rem; color:var(--muted); margin-bottom:3px}
+input[type=number]{
+  width:100%; background:#0f1317; border:1px solid var(--line); color:var(--ink);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:1rem;
+  padding:8px 9px; border-radius:6px;
+}
+input[type=number]:focus{outline:2px solid var(--diesel-dim); border-color:var(--diesel)}
+.results table{width:100%; border-collapse:collapse; font-size:.88rem}
+.results td{padding:6px 0; border-bottom:1px solid var(--line)}
+.results tr:last-child td{border-bottom:none}
+.results td.k{color:var(--muted)}
+.results td.v{
+  text-align:right; font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-variant-numeric:tabular-nums; font-size:.95rem;
+}
+.results tr.hi td.v{color:var(--diesel); font-weight:700; font-size:1.1rem}
+.results tr.warn td.v{color:var(--bad)}
+.flag{font-size:.74rem; color:var(--muted); margin-top:6px; line-height:1.4}
+.flag.warn{color:var(--bad)}
+.total td.v{font-size:1.25rem}
+.btnrow{display:flex; gap:10px; margin-top:16px}
+button{
+  flex:1; border:1px solid var(--line); background:#0f1317; color:var(--ink);
+  padding:11px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer;
+}
+button.primary{background:var(--diesel); border-color:var(--diesel); color:#1a1204}
+button:active{transform:translateY(1px)}
+.toast{
+  position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%); background:var(--good); color:#0c1b13; padding:8px 16px;
+  border-radius:20px; font-size:.85rem; font-weight:600; opacity:0; pointer-events:none;
+  transition:opacity .25s;
+}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cierre por excepción</h1>
+  <p class="sub">Compara tanque vs. surtidor por grupo — para cierres fuera de hora (mañana/mediodía).</p>
+
+  <section>
+    <h3>Grupo 1</h3>
+    <p class="sub3">Tanque 1 y 2 — Surtidor 1 y 2</p>
+    <div class="blk">
+      <label style="margin-bottom:6px">Tanque 1 (L)</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g1t1a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g1t1d" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="blk">
+      <label style="margin-bottom:6px">Tanque 2 (L)</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g1t2a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g1t2d" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="blk">
+      <label style="margin-bottom:6px">Surtidor 1</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g1s1a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g1s1d" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="blk">
+      <label style="margin-bottom:6px">Surtidor 2</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g1s2a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g1s2d" inputmode="decimal"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="results">
+    <h2>Resultado grupo 1</h2>
+    <table>
+      <tr><td class="k">Diferencia tanque</td><td class="v" id="g1dt">—</td></tr>
+      <tr><td class="k">Diferencia surtidor</td><td class="v" id="g1ds">—</td></tr>
+      <tr class="hi" id="g1row"><td class="k">Diferencia final</td><td class="v" id="g1df">—</td></tr>
+    </table>
+    <p class="flag" id="g1flag"></p>
+  </section>
+
+  <section>
+    <h3>Grupo 2</h3>
+    <p class="sub3">Tanque 3 y 4 — Surtidor 3 y 4</p>
+    <div class="blk">
+      <label style="margin-bottom:6px">Tanque 3 (L)</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g2t1a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g2t1d" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="blk">
+      <label style="margin-bottom:6px">Tanque 4 (L)</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g2t2a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g2t2d" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="blk">
+      <label style="margin-bottom:6px">Surtidor 3</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g2s1a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g2s1d" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="blk">
+      <label style="margin-bottom:6px">Surtidor 4</label>
+      <div class="row">
+        <div class="field"><label>Antes</label><input type="number" id="g2s2a" inputmode="decimal"></div>
+        <div class="field"><label>Después</label><input type="number" id="g2s2d" inputmode="decimal"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="results">
+    <h2>Resultado grupo 2</h2>
+    <table>
+      <tr><td class="k">Diferencia tanque</td><td class="v" id="g2dt">—</td></tr>
+      <tr><td class="k">Diferencia surtidor</td><td class="v" id="g2ds">—</td></tr>
+      <tr class="hi" id="g2row"><td class="k">Diferencia final</td><td class="v" id="g2df">—</td></tr>
+    </table>
+    <p class="flag" id="g2flag"></p>
+  </section>
+
+  <section class="results">
+    <h2>Total estación</h2>
+    <table>
+      <tr class="total"><td class="k">Diferencia final combinada</td><td class="v" id="totDf">—</td></tr>
+    </table>
+  </section>
+
+  <div class="btnrow">
+    <button id="copyBtn">Copiar resumen</button>
+    <button class="primary" id="resetBtn">Limpiar</button>
+  </div>
+</div>
+<div class="toast" id="toast">Copiado</div>
+
+<script>
+const WARN = 150;
+const groups = ['g1','g2'];
+const ids=[];
+groups.forEach(g=>{
+  ['t1a','t1d','t2a','t2d','s1a','s1d','s2a','s2d'].forEach(k=> ids.push(g+k));
+});
+
+function num(id){
+  const v=document.getElementById(id).value;
+  return v===''? 0 : parseFloat(v.replace(',','.'))||0;
+}
+function fmt(n){
+  return n.toLocaleString('es-AR',{maximumFractionDigits:2});
+}
+
+function calcGroup(g){
+  const t1a=num(g+'t1a'), t1d=num(g+'t1d'), t2a=num(g+'t2a'), t2d=num(g+'t2d');
+  const s1a=num(g+'s1a'), s1d=num(g+'s1d'), s2a=num(g+'s2a'), s2d=num(g+'s2d');
+  const diffTanque = (t1a-t1d) + (t2a-t2d);
+  const diffSurtidor = (s1d-s1a) + (s2d-s2a);
+  const diffFinal = diffTanque - diffSurtidor;
+
+  document.getElementById(g+'dt').textContent = fmt(diffTanque);
+  document.getElementById(g+'ds').textContent = fmt(diffSurtidor);
+  document.getElementById(g+'df').textContent = fmt(diffFinal);
+
+  const row=document.getElementById(g+'row');
+  const flag=document.getElementById(g+'flag');
+  row.classList.remove('warn');
+  flag.classList.remove('warn');
+  const hasData = t1a||t1d||t2a||t2d||s1a||s1d||s2a||s2d;
+  if(!hasData){
+    flag.textContent='';
+  } else if(Math.abs(diffFinal) > WARN){
+    row.classList.add('warn');
+    flag.classList.add('warn');
+    flag.textContent = 'Diferencia fuera de lo normal (>'+WARN+' L) — revisar surtidores de este grupo.';
+  } else {
+    flag.textContent='Dentro de lo normal.';
+  }
+  return diffFinal;
+}
+
+function calc(){
+  const d1 = calcGroup('g1');
+  const d2 = calcGroup('g2');
+  document.getElementById('totDf').textContent = fmt(d1+d2);
+  save();
+}
+
+function save(){
+  try{
+    const data={};
+    ids.forEach(id=> data[id]=document.getElementById(id).value);
+    localStorage.setItem('cierreExcepcion', JSON.stringify(data));
+  }catch(e){}
+}
+function load(){
+  try{
+    const raw=localStorage.getItem('cierreExcepcion');
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    ids.forEach(id=>{ if(data[id]!==undefined) document.getElementById(id).value=data[id]; });
+  }catch(e){}
+}
+
+ids.forEach(id=> document.getElementById(id).addEventListener('input', calc));
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  ids.forEach(id=> document.getElementById(id).value='');
+  calc();
+});
+
+document.getElementById('copyBtn').addEventListener('click', async ()=>{
+  const labels = {g1:['Tanque 1','Tanque 2','Surtidor 1','Surtidor 2'], g2:['Tanque 3','Tanque 4','Surtidor 3','Surtidor 4']};
+  let t = `*Cierre por excepción*\n`;
+  groups.forEach(g=>{
+    t += `\nGrupo ${g==='g1'?'1':'2'}:\n`;
+    const keys=['t1','t2','s1','s2'];
+    keys.forEach((k,i)=>{
+      t += `${labels[g][i]}: ${fmt(num(g+k+'a'))} → ${fmt(num(g+k+'d'))}\n`;
+    });
+    t += `Dif. tanque: ${document.getElementById(g+'dt').textContent} | Dif. surtidor: ${document.getElementById(g+'ds').textContent}\n`;
+    t += `Diferencia final: ${document.getElementById(g+'df').textContent}\n`;
+  });
+  t += `\nDiferencia final combinada: ${document.getElementById('totDf').textContent}`;
+  try{
+    await navigator.clipboard.writeText(t);
+  }catch(e){
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  const toast=document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1400);
+});
+
+load();
+calc();
+</script>
+</body>
+</html>

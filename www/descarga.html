@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuenta de Descarga</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Descarga">
+<meta name="theme-color" content="#12161a">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2312161a'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#12161a; --panel:#1a2027; --line:#2a323b;
+  --ink:#e7e4da; --muted:#8b95a1;
+  --diesel:#d9a441; --diesel-dim:#8a6a2b;
+  --bad:#e0574a; --good:#4caf7d;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:20px 14px 40px; min-height:100%;
+}
+.wrap{max-width:480px; margin:0 auto}
+h1{font-size:1.15rem; font-weight:700; letter-spacing:.2px; margin:0 0 2px}
+.sub{color:var(--muted); font-size:.82rem; margin:0 0 20px}
+section{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:14px 16px; margin-bottom:14px;
+}
+h2{font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--diesel); margin:0 0 12px; font-weight:600}
+.tank{margin-bottom:14px}
+.tank:last-child{margin-bottom:0}
+.tank.hidden{display:none}
+.tank h3{font-size:.95rem; font-weight:600; margin:0 0 8px; padding-bottom:4px; border-bottom:1px solid var(--line)}
+select{
+  width:100%; background:#0f1317; border:1px solid var(--line); color:var(--ink);
+  font-size:.9rem; padding:8px 9px; border-radius:6px; margin-bottom:14px;
+}
+.row{display:flex; gap:10px; margin-top:8px}
+.field{flex:1; min-width:0}
+label{display:block; font-size:.72rem; color:var(--muted); margin-bottom:3px}
+input[type=number]{
+  width:100%; background:#0f1317; border:1px solid var(--line); color:var(--ink);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:1rem;
+  padding:8px 9px; border-radius:6px;
+}
+input[type=number]:focus{outline:2px solid var(--diesel-dim); border-color:var(--diesel)}
+.cist-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.cist-grid .field label{font-size:.68rem}
+.results table{width:100%; border-collapse:collapse; font-size:.9rem}
+.results td{padding:7px 0; border-bottom:1px solid var(--line)}
+.results tr:last-child td{border-bottom:none}
+.results td.k{color:var(--muted)}
+.results td.v{
+  text-align:right; font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-variant-numeric:tabular-nums; font-size:1rem;
+}
+.results tr.hi td.v{color:var(--diesel); font-weight:700; font-size:1.15rem}
+.results tr.warn td.v{color:var(--bad)}
+.flag{font-size:.75rem; color:var(--muted); margin-top:8px; line-height:1.4}
+.flag.warn{color:var(--bad)}
+.btnrow{display:flex; gap:10px; margin-top:16px}
+button{
+  flex:1; border:1px solid var(--line); background:#0f1317; color:var(--ink);
+  padding:11px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer;
+}
+button.primary{background:var(--diesel); border-color:var(--diesel); color:#1a1204}
+button:active{transform:translateY(1px)}
+.toast{
+  position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%); background:var(--good); color:#0c1b13; padding:8px 16px;
+  border-radius:20px; font-size:.85rem; font-weight:600; opacity:0; pointer-events:none;
+  transition:opacity .25s;
+}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cuenta de descarga</h1>
+  <p class="sub">Cargá los tanques y el remito — el resto se calcula solo.</p>
+
+  <section>
+    <h2>Tanques</h2>
+    <select id="tankMode">
+      <option value="g2" selected>Tanque grande 2 (Tanque 3 y 4)</option>
+      <option value="g1">Tanque grande 1 (Tanque 1 y 2)</option>
+      <option value="both">Los dos tanques grandes (1, 2, 3 y 4)</option>
+    </select>
+    <div class="tank" id="tankWrap1">
+      <h3>Tanque 1</h3>
+      <div class="row">
+        <div class="field"><label>Antes (L)</label><input type="number" id="a1" inputmode="decimal"></div>
+        <div class="field"><label>Después (L)</label><input type="number" id="d1" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="tank" id="tankWrap2">
+      <h3>Tanque 2</h3>
+      <div class="row">
+        <div class="field"><label>Antes (L)</label><input type="number" id="a2" inputmode="decimal"></div>
+        <div class="field"><label>Después (L)</label><input type="number" id="d2" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="tank" id="tankWrap3">
+      <h3>Tanque 3</h3>
+      <div class="row">
+        <div class="field"><label>Antes (L)</label><input type="number" id="a3" inputmode="decimal"></div>
+        <div class="field"><label>Después (L)</label><input type="number" id="d3" inputmode="decimal"></div>
+      </div>
+    </div>
+    <div class="tank" id="tankWrap4">
+      <h3>Tanque 4</h3>
+      <div class="row">
+        <div class="field"><label>Antes (L)</label><input type="number" id="a4" inputmode="decimal"></div>
+        <div class="field"><label>Después (L)</label><input type="number" id="d4" inputmode="decimal"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Remito — Cant. a 15° por cisterna</h2>
+    <div class="cist-grid" id="cistGrid"></div>
+  </section>
+
+  <section class="results">
+    <h2>Resultado</h2>
+    <table>
+      <tr><td class="k">A) Stock inicio</td><td class="v" id="rA">—</td></tr>
+      <tr><td class="k">B) Stock fin</td><td class="v" id="rB">—</td></tr>
+      <tr><td class="k">C) Ingreso por TM [B−A]</td><td class="v" id="rC">—</td></tr>
+      <tr><td class="k">D) Litros en remito</td><td class="v" id="rD">—</td></tr>
+      <tr class="hi" id="rowE"><td class="k">E) Diferencia [C−D]</td><td class="v" id="rE">—</td></tr>
+    </table>
+    <p class="flag" id="flagText"></p>
+  </section>
+
+  <div class="btnrow">
+    <button id="copyBtn">Copiar resumen</button>
+    <button class="primary" id="resetBtn">Limpiar</button>
+  </div>
+</div>
+<div class="toast" id="toast">Copiado</div>
+
+<script>
+const CIST_COUNT = 6;
+const grid = document.getElementById('cistGrid');
+for(let i=1;i<=CIST_COUNT;i++){
+  const d=document.createElement('div');
+  d.className='field';
+  d.innerHTML=`<label>Cist. ${i}</label><input type="number" inputmode="decimal" id="c${i}">`;
+  grid.appendChild(d);
+}
+
+const MODE_TANKS = { g1:[1,2], g2:[3,4], both:[1,2,3,4] };
+const ids=['tankMode'];
+for(let i=1;i<=4;i++){ ids.push('a'+i); ids.push('d'+i); }
+for(let i=1;i<=CIST_COUNT;i++) ids.push('c'+i);
+
+function num(id){
+  const v=document.getElementById(id).value;
+  return v===''? 0 : parseFloat(v.replace(',','.'))||0;
+}
+function fmt(n){
+  return n.toLocaleString('es-AR',{maximumFractionDigits:2});
+}
+
+function applyTankMode(){
+  const active = MODE_TANKS[document.getElementById('tankMode').value];
+  for(let i=1;i<=4;i++){
+    document.getElementById('tankWrap'+i).classList.toggle('hidden', !active.includes(i));
+  }
+}
+document.getElementById('tankMode').addEventListener('change', ()=>{
+  applyTankMode();
+  for(let i=1;i<=4;i++){
+    document.getElementById('a'+i).value='';
+    document.getElementById('d'+i).value='';
+  }
+  calc();
+});
+
+function calc(){
+  const active = MODE_TANKS[document.getElementById('tankMode').value];
+  let A=0, B=0;
+  active.forEach(i=>{ A+=num('a'+i); B+=num('d'+i); });
+  const C=B-A;
+  let D=0;
+  for(let i=1;i<=CIST_COUNT;i++) D+=num('c'+i);
+  const E=C-D;
+
+  document.getElementById('rA').textContent=fmt(A);
+  document.getElementById('rB').textContent=fmt(B);
+  document.getElementById('rC').textContent=fmt(C);
+  document.getElementById('rD').textContent=fmt(D);
+  document.getElementById('rE').textContent=fmt(E);
+
+  const row=document.getElementById('rowE');
+  const flag=document.getElementById('flagText');
+  row.classList.remove('warn');
+  if(D===0 && C===0){
+    flag.textContent='';
+  } else if(Math.abs(E) > 200){
+    row.classList.add('warn');
+    flag.textContent = (E>0 ? 'Sobra ' : 'Falta ') + fmt(Math.abs(E)) + ' L respecto al remito — revisar antes de firmar.';
+    flag.classList.add('warn');
+  } else {
+    flag.textContent='Diferencia dentro de lo normal.';
+    flag.classList.remove('warn');
+  }
+  save();
+}
+
+function save(){
+  try{
+    const data={};
+    ids.forEach(id=> data[id]=document.getElementById(id).value);
+    localStorage.setItem('cuentaDescarga', JSON.stringify(data));
+  }catch(e){}
+}
+function load(){
+  try{
+    const raw=localStorage.getItem('cuentaDescarga');
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    ids.forEach(id=>{ if(data[id]!==undefined) document.getElementById(id).value=data[id]; });
+  }catch(e){}
+}
+
+ids.forEach(id=>{
+  document.getElementById(id).addEventListener('input', calc);
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    el.value = (id==='tankMode') ? 'g2' : '';
+  });
+  applyTankMode();
+  calc();
+});
+
+document.getElementById('copyBtn').addEventListener('click', async ()=>{
+  const active = MODE_TANKS[document.getElementById('tankMode').value];
+  let t = `*Cuenta de descarga*\n`;
+  active.forEach(i=>{
+    t += `Tanque ${i}: ${fmt(num('a'+i))} → ${fmt(num('d'+i))}\n`;
+  });
+  t += `A) Stock inicio: ${document.getElementById('rA').textContent}\n`
+    + `B) Stock fin: ${document.getElementById('rB').textContent}\n`
+    + `C) Ingreso por TM: ${document.getElementById('rC').textContent}\n`
+    + `D) Litros en remito: ${document.getElementById('rD').textContent}\n`
+    + `E) Diferencia: ${document.getElementById('rE').textContent}`;
+  try{
+    await navigator.clipboard.writeText(t);
+  }catch(e){
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  const toast=document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1400);
+});
+
+load();
+applyTankMode();
+calc();
+</script>
+</body>
+</html>
