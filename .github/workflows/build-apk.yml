@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      PLAYA_KEYSTORE_B64: ${{ secrets.PLAYA_KEYSTORE_B64 }}
+      PLAYA_KS_PASS: ${{ secrets.PLAYA_KS_PASS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
