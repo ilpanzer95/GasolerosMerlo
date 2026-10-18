@@ -6,282 +6,165 @@
 <title>Cierre nocturno</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Cierre Exc.">
 <meta name="theme-color" content="#12161a">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2312161a'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
 <style>
-:root{
-  --bg:#12161a; --panel:#1a2027; --line:#2a323b;
-  --ink:#e7e4da; --muted:#8b95a1;
-  --diesel:#d9a441; --diesel-dim:#8a6a2b;
-  --bad:#e0574a; --good:#4caf7d;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
-}
+:root{--bg:#12161a;--panel:#1a2027;--line:#2a323b;--ink:#e7e4da;--muted:#8b95a1;--diesel:#d9a441;--diesel-dim:#8a6a2b;--bad:#e0574a;--good:#4caf7d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:inherit}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  padding:20px 14px 40px; min-height:100%;
-}
-.wrap{max-width:480px; margin:0 auto}
-h1{font-size:1.15rem; font-weight:700; letter-spacing:.2px; margin:0 0 2px}
-.sub{color:var(--muted); font-size:.82rem; margin:0 0 20px}
-section{
-  background:var(--panel); border:1px solid var(--line); border-radius:10px;
-  padding:14px 16px; margin-bottom:14px;
-}
-h2{font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--diesel); margin:0 0 12px; font-weight:600}
-h3{font-size:.85rem; font-weight:600; margin:0 0 8px; padding-bottom:4px; border-bottom:1px solid var(--line)}
-.sub3{font-size:.7rem; color:var(--muted); margin:-8px 0 10px; text-transform:uppercase; letter-spacing:.06em}
-.blk{margin-bottom:14px}
-.blk:last-child{margin-bottom:0}
-.row{display:flex; gap:10px; margin-top:6px}
-.field{flex:1; min-width:0}
-label{display:block; font-size:.72rem; color:var(--muted); margin-bottom:3px}
-input[type=number]{
-  width:100%; background:#0f1317; border:1px solid var(--line); color:var(--ink);
-  font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:1rem;
-  padding:8px 9px; border-radius:6px;
-}
-input[type=number]:focus{outline:2px solid var(--diesel-dim); border-color:var(--diesel)}
-.results table{width:100%; border-collapse:collapse; font-size:.88rem}
-.results td{padding:6px 0; border-bottom:1px solid var(--line)}
-.results tr:last-child td{border-bottom:none}
-.results td.k{color:var(--muted)}
-.results td.v{
-  text-align:right; font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-  font-variant-numeric:tabular-nums; font-size:.95rem;
-}
-.results tr.hi td.v{color:var(--diesel); font-weight:700; font-size:1.1rem}
-.results tr.warn td.v{color:var(--bad)}
-.flag{font-size:.74rem; color:var(--muted); margin-top:6px; line-height:1.4}
-.flag.warn{color:var(--bad)}
-.total td.v{font-size:1.25rem}
-.btnrow{display:flex; gap:10px; margin-top:16px}
-button{
-  flex:1; border:1px solid var(--line); background:#0f1317; color:var(--ink);
-  padding:11px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer;
-}
-button.primary{background:var(--diesel); border-color:var(--diesel); color:#1a1204}
-button:active{transform:translateY(1px)}
-.toast{
-  position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px));
-  transform:translateX(-50%); background:var(--good); color:#0c1b13; padding:8px 16px;
-  border-radius:20px; font-size:.85rem; font-weight:600; opacity:0; pointer-events:none;
-  transition:opacity .25s;
-}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:20px 14px 40px}
+.wrap{max-width:480px;margin:0 auto}
+h1{font-size:1.15rem;font-weight:700;margin:0 0 2px}
+.sub{color:var(--muted);font-size:.82rem;margin:0 0 20px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--diesel);margin:0 0 12px;font-weight:600}
+.note{font-size:.74rem;color:var(--muted);margin:-6px 0 10px;line-height:1.4}
+.g{display:grid;grid-template-columns:62px 1fr 1fr;gap:8px;align-items:center;margin-top:6px}
+.g.h span{font-size:.72rem;color:var(--muted)}
+.g .lb{font-size:.85rem;font-weight:600}
+.row{display:flex;gap:10px;margin-top:6px}
+.field{flex:1;min-width:0}
+label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:3px}
+input[type=text]{width:100%;background:#0f1317;border:1px solid var(--line);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:1rem;padding:8px 9px;border-radius:6px}
+input[type=text]:focus{outline:2px solid var(--diesel-dim);border-color:var(--diesel)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.88rem;color:var(--ink);margin:12px 0 4px}
+.chk input{width:20px;height:20px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+td{padding:6px 0;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+td.k{color:var(--muted)}
+td.v{text-align:right;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums}
+tr.hi td.v{color:var(--diesel);font-weight:700;font-size:1.1rem}
+td.v.bad{color:var(--bad)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two h3{font-size:.85rem;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.btnrow{display:flex;gap:10px;margin-top:10px}
+button{flex:1;border:1px solid var(--line);background:#0f1317;color:var(--ink);padding:11px;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer}
+button.primary{background:var(--diesel);border-color:var(--diesel);color:#1a1204}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--good);color:#0c1b13;padding:8px 16px;border-radius:20px;font-size:.85rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 .toast.show{opacity:1}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Cierre por excepción</h1>
-  <p class="sub">Compara tanque vs. surtidor por grupo — para cierres fuera de hora (mañana/mediodía).</p>
+<h1>Cierre nocturno</h1>
+<p class="sub">Surtidores + telemedición, listo para pasar a la planilla.</p>
 
-  <section>
-    <h3>Grupo 1</h3>
-    <p class="sub3">Tanque 1 y 2 — Surtidor 1 y 2</p>
-    <div class="blk">
-      <label style="margin-bottom:6px">Tanque 1 (L)</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g1t1a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g1t1d" inputmode="decimal"></div>
-      </div>
-    </div>
-    <div class="blk">
-      <label style="margin-bottom:6px">Tanque 2 (L)</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g1t2a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g1t2d" inputmode="decimal"></div>
-      </div>
-    </div>
-    <div class="blk">
-      <label style="margin-bottom:6px">Surtidor 1</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g1s1a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g1s1d" inputmode="decimal"></div>
-      </div>
-    </div>
-    <div class="blk">
-      <label style="margin-bottom:6px">Surtidor 2</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g1s2a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g1s2d" inputmode="decimal"></div>
-      </div>
-    </div>
-  </section>
+<section>
+<h2>1) Surtidores</h2>
+<div class="g h"><span></span><span>Inicio</span><span>Cierre</span></div>
+<div id="surt"></div>
+<table style="margin-top:8px">
+<tr><td class="k">Venta Tanque 1 (S1+S2)</td><td class="v" id="v1">—</td></tr>
+<tr><td class="k">Venta Tanque 2 (S3+S4)</td><td class="v" id="v2">—</td></tr>
+</table>
+</section>
 
-  <section class="results">
-    <h2>Resultado grupo 1</h2>
-    <table>
-      <tr><td class="k">Diferencia tanque</td><td class="v" id="g1dt">—</td></tr>
-      <tr><td class="k">Diferencia surtidor</td><td class="v" id="g1ds">—</td></tr>
-      <tr class="hi" id="g1row"><td class="k">Diferencia final</td><td class="v" id="g1df">—</td></tr>
-    </table>
-    <p class="flag" id="g1flag"></p>
-  </section>
+<section>
+<h2>2) Telemedición</h2>
+<p class="note">Sondas 1 y 2 = Tanque 1. Sondas 3 y 4 = Tanque 2. El inicio es opcional: sirve para ver el consumo por telemedición.</p>
+<div class="g h"><span></span><span>Inicio</span><span>Final</span></div>
+<div id="tele"></div>
+<table style="margin-top:8px">
+<tr><td class="k">Medición final T1 (E)</td><td class="v" id="e1">—</td></tr>
+<tr><td class="k">Medición final T2 (E)</td><td class="v" id="e2">—</td></tr>
+<tr><td class="k">Consumo telemedición T1</td><td class="v" id="k1">—</td></tr>
+<tr><td class="k">Consumo telemedición T2</td><td class="v" id="k2">—</td></tr>
+</table>
+</section>
 
-  <section>
-    <h3>Grupo 2</h3>
-    <p class="sub3">Tanque 3 y 4 — Surtidor 3 y 4</p>
-    <div class="blk">
-      <label style="margin-bottom:6px">Tanque 3 (L)</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g2t1a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g2t1d" inputmode="decimal"></div>
-      </div>
-    </div>
-    <div class="blk">
-      <label style="margin-bottom:6px">Tanque 4 (L)</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g2t2a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g2t2d" inputmode="decimal"></div>
-      </div>
-    </div>
-    <div class="blk">
-      <label style="margin-bottom:6px">Surtidor 3</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g2s1a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g2s1d" inputmode="decimal"></div>
-      </div>
-    </div>
-    <div class="blk">
-      <label style="margin-bottom:6px">Surtidor 4</label>
-      <div class="row">
-        <div class="field"><label>Antes</label><input type="number" id="g2s2a" inputmode="decimal"></div>
-        <div class="field"><label>Después</label><input type="number" id="g2s2d" inputmode="decimal"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="results">
-    <h2>Resultado grupo 2</h2>
-    <table>
-      <tr><td class="k">Diferencia tanque</td><td class="v" id="g2dt">—</td></tr>
-      <tr><td class="k">Diferencia surtidor</td><td class="v" id="g2ds">—</td></tr>
-      <tr class="hi" id="g2row"><td class="k">Diferencia final</td><td class="v" id="g2df">—</td></tr>
-    </table>
-    <p class="flag" id="g2flag"></p>
-  </section>
-
-  <section class="results">
-    <h2>Total estación</h2>
-    <table>
-      <tr class="total"><td class="k">Diferencia final combinada</td><td class="v" id="totDf">—</td></tr>
-    </table>
-  </section>
-
-  <div class="btnrow">
-    <button id="copyBtn">Copiar resumen</button>
-    <button class="primary" id="resetBtn">Limpiar</button>
-  </div>
+<section>
+<h2>3) Planilla</h2>
+<p class="note" id="hintA"></p>
+<div class="row">
+<div class="field"><label>Stock inicial (A) T1</label><input type="text" inputmode="numeric" id="a1"></div>
+<div class="field"><label>Stock inicial (A) T2</label><input type="text" inputmode="numeric" id="a2"></div>
 </div>
-<div class="toast" id="toast">Copiado</div>
+<label class="chk"><input type="checkbox" id="hasB"> Entró camión hoy (ingresos B)</label>
+<div class="row" id="bbox" hidden>
+<div class="field"><label>Ingresos (B) T1</label><input type="text" inputmode="numeric" id="b1"></div>
+<div class="field"><label>Ingresos (B) T2</label><input type="text" inputmode="numeric" id="b2"></div>
+</div>
+</section>
+
+<section>
+<h2>Resultado para la planilla</h2>
+<div class="two">
+<div><h3>Tanque 1</h3><table>
+<tr><td class="k">A</td><td class="v" id="pa1">—</td></tr>
+<tr><td class="k">B</td><td class="v" id="pb1">—</td></tr>
+<tr><td class="k">C</td><td class="v" id="pc1">—</td></tr>
+<tr><td class="k">D</td><td class="v" id="pd1">—</td></tr>
+<tr><td class="k">E</td><td class="v" id="pe1">—</td></tr>
+<tr class="hi"><td class="k">E−D</td><td class="v" id="pf1">—</td></tr></table></div>
+<div><h3>Tanque 2</h3><table>
+<tr><td class="k">A</td><td class="v" id="pa2">—</td></tr>
+<tr><td class="k">B</td><td class="v" id="pb2">—</td></tr>
+<tr><td class="k">C</td><td class="v" id="pc2">—</td></tr>
+<tr><td class="k">D</td><td class="v" id="pd2">—</td></tr>
+<tr><td class="k">E</td><td class="v" id="pe2">—</td></tr>
+<tr class="hi"><td class="k">E−D</td><td class="v" id="pf2">—</td></tr></table></div>
+</div>
+<p class="note" style="margin:10px 0 0">A stock inicial · B ingresos · C consumos (surtidores) · D = A+B−C · E medición final (telemedición). Rojo si la diferencia pasa de 150 L.</p>
+</section>
+
+<div class="btnrow"><button id="copy">Copiar resumen</button><button class="primary" id="save">Guardar cierre</button></div>
+<div class="btnrow"><button id="clear">Nuevo cierre (borrar todo)</button></div>
+<p class="note" style="margin-top:10px">Al guardar el cierre, la medición final (E) pasa a ser el stock inicial (A) del día siguiente.</p>
+</div>
+<div class="toast" id="toast"></div>
 
 <script>
-const WARN = 150;
-const groups = ['g1','g2'];
-const ids=[];
-groups.forEach(g=>{
-  ['t1a','t1d','t2a','t2d','s1a','s1d','s2a','s2d'].forEach(k=> ids.push(g+k));
-});
-
-function num(id){
-  const v=document.getElementById(id).value;
-  return v===''? 0 : parseFloat(v.replace(',','.'))||0;
-}
-function fmt(n){
-  return n.toLocaleString('es-AR',{maximumFractionDigits:2});
-}
-
-function calcGroup(g){
-  const t1a=num(g+'t1a'), t1d=num(g+'t1d'), t2a=num(g+'t2a'), t2d=num(g+'t2d');
-  const s1a=num(g+'s1a'), s1d=num(g+'s1d'), s2a=num(g+'s2a'), s2d=num(g+'s2d');
-  const diffTanque = (t1a-t1d) + (t2a-t2d);
-  const diffSurtidor = (s1d-s1a) + (s2d-s2a);
-  const diffFinal = diffTanque - diffSurtidor;
-
-  document.getElementById(g+'dt').textContent = fmt(diffTanque);
-  document.getElementById(g+'ds').textContent = fmt(diffSurtidor);
-  document.getElementById(g+'df').textContent = fmt(diffFinal);
-
-  const row=document.getElementById(g+'row');
-  const flag=document.getElementById(g+'flag');
-  row.classList.remove('warn');
-  flag.classList.remove('warn');
-  const hasData = t1a||t1d||t2a||t2d||s1a||s1d||s2a||s2d;
-  if(!hasData){
-    flag.textContent='';
-  } else if(Math.abs(diffFinal) > WARN){
-    row.classList.add('warn');
-    flag.classList.add('warn');
-    flag.textContent = 'Diferencia fuera de lo normal (>'+WARN+' L) — revisar surtidores de este grupo.';
-  } else {
-    flag.textContent='Dentro de lo normal.';
-  }
-  return diffFinal;
-}
-
+var LIM=150,KEY='cierreNocturno_v1',KEYE='cierreNocturno_lastE',ids=[];
+function mk(parent,p1,p2,lab){var h='';for(var i=1;i<=4;i++){h+='<div class="g"><span class="lb">'+lab+i+'</span><input type="text" inputmode="numeric" id="'+p1+i+'"><input type="text" inputmode="numeric" id="'+p2+i+'"></div>';ids.push(p1+i,p2+i)}document.getElementById(parent).innerHTML=h}
+mk('surt','si','sc','S');mk('tele','ti','tf','Sonda ');ids.push('a1','a2','b1','b2');
+function el(i){return document.getElementById(i)}
+function n(id){var s=(el(id).value||'').replace(/[^0-9\-]/g,'');return(s===''||s==='-')?null:parseInt(s,10)}
+function f(x){return(x===null||x===undefined||isNaN(x))?'—':x.toLocaleString('es-AR')}
+function sub(a,b){return(a===null||b===null)?null:b-a}
+function add(a,b){return(a===null||b===null)?null:a+b}
+function setd(id,v,cls){var e=el(id);e.textContent=f(v);e.className='v'+(cls?' '+cls:'')}
+var R={};
 function calc(){
-  const d1 = calcGroup('g1');
-  const d2 = calcGroup('g2');
-  document.getElementById('totDf').textContent = fmt(d1+d2);
-  save();
+ var s=[],i;for(i=1;i<=4;i++)s[i]=sub(n('si'+i),n('sc'+i));
+ var v1=add(s[1],s[2]),v2=add(s[3],s[4]),e1=add(n('tf1'),n('tf2')),e2=add(n('tf3'),n('tf4'));
+ var t1=add(n('ti1'),n('ti2')),t2=add(n('ti3'),n('ti4')),hb=el('hasB').checked;
+ var b1=hb?(n('b1')||0):0,b2=hb?(n('b2')||0):0,a1=n('a1'),a2=n('a2');
+ var d1=(a1===null||v1===null)?null:a1+b1-v1,d2=(a2===null||v2===null)?null:a2+b2-v2;
+ var f1=(e1===null||d1===null)?null:e1-d1,f2=(e2===null||d2===null)?null:e2-d2;
+ var k1=(t1===null||e1===null)?null:t1+b1-e1,k2=(t2===null||e2===null)?null:t2+b2-e2;
+ R={a1:a1,a2:a2,b1:b1,b2:b2,v1:v1,v2:v2,d1:d1,d2:d2,e1:e1,e2:e2,f1:f1,f2:f2,k1:k1,k2:k2};
+ setd('v1',v1);setd('v2',v2);setd('e1',e1);setd('e2',e2);setd('k1',k1);setd('k2',k2);
+ el('bbox').hidden=!hb;
+ setd('pa1',a1);setd('pa2',a2);setd('pb1',b1);setd('pb2',b2);setd('pc1',v1);setd('pc2',v2);setd('pd1',d1);setd('pd2',d2);setd('pe1',e1);setd('pe2',e2);
+ setd('pf1',f1,(f1!==null&&Math.abs(f1)>LIM)?'bad':'');setd('pf2',f2,(f2!==null&&Math.abs(f2)>LIM)?'bad':'');
 }
-
-function save(){
-  try{
-    const data={};
-    ids.forEach(id=> data[id]=document.getElementById(id).value);
-    localStorage.setItem('cierreExcepcion', JSON.stringify(data));
-  }catch(e){}
-}
+function persist(){try{var o={};ids.forEach(function(i){o[i]=el(i).value});o.hasB=el('hasB').checked;localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
 function load(){
-  try{
-    const raw=localStorage.getItem('cierreExcepcion');
-    if(!raw) return;
-    const data=JSON.parse(raw);
-    ids.forEach(id=>{ if(data[id]!==undefined) document.getElementById(id).value=data[id]; });
-  }catch(e){}
+ try{var o=JSON.parse(localStorage.getItem(KEY)||'null');if(o){ids.forEach(function(i){if(o[i]!==undefined)el(i).value=o[i]});el('hasB').checked=!!o.hasB}}catch(e){}
+ try{var L=JSON.parse(localStorage.getItem(KEYE)||'null');if(L){var any=false;
+  if(!el('a1').value&&L.e1!==null){el('a1').value=L.e1;any=true}
+  if(!el('a2').value&&L.e2!==null){el('a2').value=L.e2;any=true}
+  if(any)el('hintA').textContent='Stock inicial tomado de la medición final del cierre del '+L.fecha+'. Podés corregirlo.'}}catch(e){}
 }
-
-ids.forEach(id=> document.getElementById(id).addEventListener('input', calc));
-
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  ids.forEach(id=> document.getElementById(id).value='');
-  calc();
-});
-
-document.getElementById('copyBtn').addEventListener('click', async ()=>{
-  const labels = {g1:['Tanque 1','Tanque 2','Surtidor 1','Surtidor 2'], g2:['Tanque 3','Tanque 4','Surtidor 3','Surtidor 4']};
-  let t = `*Cierre por excepción*\n`;
-  groups.forEach(g=>{
-    t += `\nGrupo ${g==='g1'?'1':'2'}:\n`;
-    const keys=['t1','t2','s1','s2'];
-    keys.forEach((k,i)=>{
-      t += `${labels[g][i]}: ${fmt(num(g+k+'a'))} → ${fmt(num(g+k+'d'))}\n`;
-    });
-    t += `Dif. tanque: ${document.getElementById(g+'dt').textContent} | Dif. surtidor: ${document.getElementById(g+'ds').textContent}\n`;
-    t += `Diferencia final: ${document.getElementById(g+'df').textContent}\n`;
-  });
-  t += `\nDiferencia final combinada: ${document.getElementById('totDf').textContent}`;
-  try{
-    await navigator.clipboard.writeText(t);
-  }catch(e){
-    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-  }
-  const toast=document.getElementById('toast');
-  toast.classList.add('show');
-  setTimeout(()=>toast.classList.remove('show'), 1400);
-});
-
-load();
-calc();
+function toast(t){var x=el('toast');x.textContent=t;x.classList.add('show');setTimeout(function(){x.classList.remove('show')},1800)}
+function summary(){
+ function ln(t,a,b,c,d,e,g){return t+'\nA: '+f(a)+' | B: '+f(b)+' | C: '+f(c)+'\nD: '+f(d)+' | E: '+f(e)+'\nDif (E-D): '+f(g)+((g!==null&&Math.abs(g)>LIM)?' ⚠️':'')}
+ return '*Cierre nocturno '+new Date().toLocaleDateString('es-AR')+'*\n\n'+
+  ln('TANQUE 1 (S1+S2)',R.a1,R.b1,R.v1,R.d1,R.e1,R.f1)+'\n\n'+
+  ln('TANQUE 2 (S3+S4)',R.a2,R.b2,R.v2,R.d2,R.e2,R.f2)+'\n\nConsumo por telemedición: T1 '+f(R.k1)+' | T2 '+f(R.k2)}
+ids.forEach(function(i){el(i).addEventListener('input',function(){calc();persist()})});
+el('hasB').addEventListener('change',function(){calc();persist()});
+el('copy').onclick=function(){var t=summary();
+ function fb(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Resumen copiado')}catch(e){toast('No se pudo copiar')}document.body.removeChild(ta)}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('Resumen copiado')},fb)}else fb()};
+el('save').onclick=function(){
+ if(R.e1===null||R.e2===null){toast('Faltan las telemediciones finales');return}
+ try{localStorage.setItem(KEYE,JSON.stringify({e1:R.e1,e2:R.e2,fecha:new Date().toLocaleDateString('es-AR')}));toast('Guardado: mañana el stock inicial se completa solo')}catch(e){toast('No se pudo guardar')}};
+el('clear').onclick=function(){
+ if(!confirm('¿Borrar todo para un cierre nuevo?'))return;
+ ids.forEach(function(i){el(i).value=''});el('hasB').checked=false;el('hintA').textContent='';
+ try{localStorage.removeItem(KEY)}catch(e){}
+ load();calc();persist()};
+load();calc();
 </script>
 </body>
 </html>
