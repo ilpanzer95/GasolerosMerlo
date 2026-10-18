@@ -21,7 +21,7 @@ jobs:
       - name: Crear proyecto Android
         run: npx cap add android
       - name: Preparar (permisos, ícono, firma)
-        run: ./scripts/preparar-android.sh
+       run: bash scripts/preparar-android.sh
       - name: Sincronizar web
         run: npx cap sync android
       - name: Compilar APK
