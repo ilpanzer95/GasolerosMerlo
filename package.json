@@ -1,0 +1,12 @@
+{
+  "name": "playa-y-combustible",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playa y Combustible - APK",
+  "dependencies": {
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/cli": "^7.4.0",
+    "@capacitor/core": "^7.4.0",
+    "@capacitor-community/speech-recognition": "^7.0.1"
+  }
+}

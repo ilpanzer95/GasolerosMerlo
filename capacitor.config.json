@@ -1,0 +1,9 @@
+{
+  "appId": "com.despacho.playa",
+  "appName": "Playa y Combustible",
+  "webDir": "www",
+  "backgroundColor": "#12161a",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "force"
+  }
+}
