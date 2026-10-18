@@ -23,15 +23,18 @@ done
 # Firma fija: siempre la misma llave => los APK nuevos se instalan encima del anterior
 G=$A/app/build.gradle
 if ! grep -q "playaSigning" "$G"; then
-  cp keystore.jks $A/app/keystore.jks
+  if [ -z "$PLAYA_KEYSTORE_B64" ] || [ -z "$PLAYA_KS_PASS" ]; then
+    echo "ERROR: faltan los secretos PLAYA_KEYSTORE_B64 y PLAYA_KS_PASS (GitHub > Settings > Secrets and variables > Actions)."; exit 1
+  fi
+  echo "$PLAYA_KEYSTORE_B64" | base64 -d > $A/app/keystore.jks
   python3 - <<'PY'
 g=open('android/app/build.gradle').read()
 sign="""    signingConfigs {
         playaSigning {
             storeFile file('keystore.jks')
-            storePassword 'android'
+            storePassword System.getenv('PLAYA_KS_PASS')
             keyAlias 'playa'
-            keyPassword 'android'
+            keyPassword System.getenv('PLAYA_KS_PASS')
         }
     }
 """
