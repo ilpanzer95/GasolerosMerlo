@@ -4,7 +4,7 @@
 <meta name="theme-color" content="#12161a">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
-<title>Playa y Combustible</title>
+<title>Gasoleros Metropol</title>
 <style>
 html,body{height:100%;margin:0;background:#12161a;color:#eef1f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
@@ -16,22 +16,26 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 #bar{display:none;padding:6px 8px;background:#12161a}
 #bar button{border:0;border-radius:10px;padding:10px 16px;font-size:16px;font-weight:700;background:#f5c518;color:#12161a}
 #v{flex:1;position:relative;display:none}
+#sig{text-align:center;font-size:12px;color:#5b6573;padding:6px 0 10px;letter-spacing:.04em}
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#fff}
 iframe.a{display:block}
 </style></head><body>
 <div id="bar"><button id="back">‹ Menú</button></div>
-<div id="menu"><h1>Playa y Combustible</h1>
+<div id="menu"><h1>Gasoleros Metropol</h1>
  <button class="card" data-k="playa"><span class="ic">🚌</span><span><b>Control de playa</b><small>Cargados y faltantes</small></span></button>
  <button class="card" data-k="descarga"><span class="ic">🚛</span><span><b>Cuenta de descarga</b><small>Descarga del camión</small></span></button>
  <button class="card" data-k="cierre"><span class="ic">⛽</span><span><b>Cierre nocturno</b><small>Surtidores y telemedición</small></span></button>
+ <button class="card" data-k="carga"><span class="ic">📋</span><span><b>Control de carga</b><small>Diario, semanal y Excel</small></span></button>
 </div>
 <div id="v"></div>
+<div id="sig">by: Panzer 👀 · v2.0</div>
 <script>
-var T={playa:'playa.html',descarga:'descarga.html',cierre:'cierre.html'};
+var T={playa:'playa.html',descarga:'descarga.html',cierre:'cierre.html',carga:'carga.html'};
 var menu=document.getElementById('menu'),bar=document.getElementById('bar'),v=document.getElementById('v');
-function showMenu(){menu.style.display='flex';bar.style.display='none';v.style.display='none';
+var sig=document.getElementById('sig');
+function showMenu(){sig.style.display='block';menu.style.display='flex';bar.style.display='none';v.style.display='none';
  Array.prototype.forEach.call(v.children,function(f){f.className=''})}
-function openTool(k,push){menu.style.display='none';bar.style.display='block';v.style.display='block';
+function openTool(k,push){sig.style.display='none';menu.style.display='none';bar.style.display='block';v.style.display='block';
  Object.keys(T).forEach(function(x){var f=document.getElementById('f_'+x);
   if(x===k&&!f){f=document.createElement('iframe');f.id='f_'+x;f.src=T[x];f.setAttribute('allow','microphone; clipboard-write');v.appendChild(f)}
   if(f)f.className=x===k?'a':''});
