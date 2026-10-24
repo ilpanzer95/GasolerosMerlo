@@ -1,12 +1,14 @@
 {
   "name": "playa-y-combustible",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Playa y Combustible - APK",
+  "description": "Gasoleros Metropol - APK",
   "dependencies": {
     "@capacitor/android": "^7.4.0",
     "@capacitor/cli": "^7.4.0",
     "@capacitor/core": "^7.4.0",
-    "@capacitor-community/speech-recognition": "^7.0.1"
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/share": "^7.0.0"
   }
 }
