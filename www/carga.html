@@ -229,10 +229,11 @@ var FSE=null,FSPUSH=false,IGN=0;
 function endScroll(el){if(el.id==='wk')setTimeout(function(){el.scrollLeft=el.scrollWidth},0)}
 /* al abrir la pantalla completa se agrega una entrada al historial: el botón/gesto "atrás" la cierra sin salir de la herramienta */
 function openFS(el){FSE=el;el.classList.add('fs');$('fsx').classList.add('on');document.body.style.overflow='hidden';endScroll(el);
- try{history.pushState({fs:1},'');FSPUSH=true}catch(e){FSPUSH=false}}
+ if(!CAP){try{history.pushState({fs:1},'');FSPUSH=true}catch(e){FSPUSH=false}}}
 function closeFS(fromPop){if(FSE){var e=FSE;FSE.classList.remove('fs');FSE=null;endScroll(e)}
  $('fsx').classList.remove('on');document.body.style.overflow='';
  if(FSPUSH&&fromPop!==true){FSPUSH=false;IGN++;try{history.back()}catch(x){IGN--}}else FSPUSH=false}
+window.__back=function(){if(FSE){closeFS();return true}return false};
 window.addEventListener('popstate',function(){if(IGN>0){IGN--;return}if(FSE){FSPUSH=false;closeFS(true)}});
 function toggleFS(el){if(FSE)closeFS();else openFS(el)}
 function dtap(el,single){var t=0,tm;el.addEventListener('click',function(e){var now=Date.now();

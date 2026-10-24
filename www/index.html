@@ -22,13 +22,13 @@ iframe.a{display:block}
 </style></head><body>
 <div id="bar"><button id="back">‹ Menú</button></div>
 <div id="menu"><h1>Gasoleros Metropol</h1>
+ <button class="card" data-k="carga"><span class="ic">📋</span><span><b>Control de carga</b><small>Diario, semanal y Excel</small></span></button>
  <button class="card" data-k="playa"><span class="ic">🚌</span><span><b>Control de playa</b><small>Cargados y faltantes</small></span></button>
  <button class="card" data-k="descarga"><span class="ic">🚛</span><span><b>Cuenta de descarga</b><small>Descarga del camión</small></span></button>
  <button class="card" data-k="cierre"><span class="ic">⛽</span><span><b>Cierre nocturno</b><small>Surtidores y telemedición</small></span></button>
- <button class="card" data-k="carga"><span class="ic">📋</span><span><b>Control de carga</b><small>Diario, semanal y Excel</small></span></button>
 </div>
 <div id="v"></div>
-<div id="sig">by: Panzer 👀 · v2.0</div>
+<div id="sig">by: Panzer · v2.0</div>
 <script>
 var T={playa:'playa.html',descarga:'descarga.html',cierre:'cierre.html',carga:'carga.html'};
 var menu=document.getElementById('menu'),bar=document.getElementById('bar'),v=document.getElementById('v');
@@ -42,6 +42,14 @@ function openTool(k,push){sig.style.display='none';menu.style.display='none';bar
  if(push)history.pushState({k:k},'')}
 Array.prototype.forEach.call(document.querySelectorAll('.card'),function(b){b.onclick=function(){openTool(b.dataset.k,true)}});
 document.getElementById('back').onclick=function(){if(history.state&&history.state.k)history.back();else showMenu()};
+/* Botón/gesto "atrás" del celular (APK): primero cierra la pantalla completa de la herramienta, después vuelve al menú, y recién en el menú sale de la app */
+var CAPA=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
+function goBack(){
+ if(menu.style.display!=='none'){if(CAPA&&CAPA.exitApp)CAPA.exitApp();return}
+ var f=v.querySelector('iframe.a');
+ try{if(f&&f.contentWindow.__back&&f.contentWindow.__back())return}catch(e){}
+ showMenu();if(history.state&&history.state.k)try{history.back()}catch(e){}}
+if(CAPA&&CAPA.addListener)CAPA.addListener('backButton',goBack);
 window.addEventListener('popstate',function(e){if(e.state&&e.state.k)openTool(e.state.k,false);else showMenu()});
 
 </script></body></html>
