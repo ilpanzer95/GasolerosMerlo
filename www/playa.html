@@ -13,7 +13,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:10px 12px 6px;z-index:5;border-bottom:1px solid var(--bd)}
 .row{display:flex;gap:8px;align-items:center}
-.mic{flex:1;border:0;border-radius:14px;padding:16px;font-size:18px;font-weight:700;background:var(--ac);color:#fff}
+.mic{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;flex:1;border:0;border-radius:14px;padding:16px;font-size:18px;font-weight:700;background:var(--ac);color:#fff}
 .mic.on{background:var(--f);animation:p 1s infinite}@keyframes p{50%{opacity:.7}}
 input[type=text],textarea{width:100%;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:10px;font-size:16px}
 button{font:inherit}.btn{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 12px;font-size:14px}
@@ -98,42 +98,57 @@ var CAP=(function(){try{var c=window.parent&&window.parent.Capacitor||window.Cap
 var NSR=CAP&&CAP.Plugins&&CAP.Plugins.SpeechRecognition,buf='';
 var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,on=false;
 var STATUS=/cargad|falta|pendiente|se fue|fueron|volvi|taller|predio|sali/;
-function nativeStop(){on=false;buf='';ui();try{NSR.stop()}catch(e){}}
-async function nativeLoop(){
+var held=false,busy=false,bufTs=0;
+/* de las varias interpretaciones del reconocedor, elige la que más internos conocidos tiene */
+function pick(ms){if(!ms||!ms.length)return '';var best=ms[0],bs=-1;ms.forEach(function(t){var s=0;(String(t).match(/\d{4}/g)||[]).forEach(function(x){if(S.b[x])s++});if(STATUS.test(String(t).toLowerCase()))s+=.5;if(s>bs){bs=s;best=t}});return best}
+function ui(){var b=$('mic');b.className='mic'+(held?' on':'');b.textContent=held?'🎤 Hablá… soltá para enviar':'🎤 Mantené para hablar'}
+function wait(ms){return new Promise(function(z){setTimeout(z,ms)})}
+async function nativeHold(){
+ if(busy)return;busy=true;
  try{var pr=await NSR.checkPermissions();if(pr.speechRecognition!=='granted')pr=await NSR.requestPermissions();
-  if(pr.speechRecognition!=='granted'){msg('Falta el permiso de micrófono. Activalo en Ajustes del celular > Aplicaciones > Playa > Permisos.');return}
-  var av=await NSR.available();if(!av.available){msg('Este celular no tiene reconocimiento de voz. Instalá/actualizá la app "Google" desde Play Store.');return}
- }catch(e){msg('No se pudo preparar el micrófono: '+(e.message||e));return}
- on=true;ui();msg('🎤 Escuchando… hablá y decí "cargados" o "falta" al final.');
+  if(pr.speechRecognition!=='granted'){msg('Falta el permiso de micrófono. Activalo en Ajustes del celular > Aplicaciones > Playa > Permisos.');busy=false;held=false;ui();return}
+  var av=await NSR.available();if(!av.available){msg('Este celular no tiene reconocimiento de voz. Instalá/actualizá la app "Google" desde Play Store.');busy=false;held=false;ui();return}
+ }catch(e){msg('No se pudo preparar el micrófono: '+(e.message||e));busy=false;held=false;ui();return}
  var fails=0;
- while(on){
+ while(held){
   try{
-   var r=await NSR.start({language:'es-AR',maxResults:1,partialResults:false,popup:false});
+   var r=await NSR.start({language:'es-AR',maxResults:5,partialResults:false,popup:false});
    fails=0;
-   var t=(r&&r.matches&&r.matches[0])||'';
-   if(t){buf=(buf+' '+t).trim();
+   var t=pick(r&&r.matches);
+   if(t){if(Date.now()-bufTs>30000)buf='';buf=(buf+' '+t).trim();bufTs=Date.now();
     if(STATUS.test(buf.toLowerCase())){var b=buf;buf='';handle(b)}
-    else msg('Escuché: "'+buf+'" · falta decir cargados / falta / se fue');}
+    else msg('Escuché: "'+buf+'" · falta decir cargados / falta / se fue')}
   }catch(e){
    var m=String(e&&e.message||e);
-   if(/no match|no speech|didn.t understand|busy|client side/i.test(m)){await new Promise(function(z){setTimeout(z,250)});continue}
+   if(/no match|no speech|didn.t understand|busy|client side/i.test(m)){if(held)await wait(200);continue}
    fails++;
-   if(fails>=3||/permission|not available|network|server/i.test(m)){on=false;ui();
-    msg(/network|server/i.test(m)?'Sin conexión para el reconocimiento de voz. Revisá internet o descargá el idioma español offline en Ajustes de Google.':'Micrófono no disponible ('+m+'). Usá el campo de texto.');return}
-   await new Promise(function(z){setTimeout(z,400)});
-  }
- }
- ui()}
-$('mic').onclick=function(){
- if(NSR){if(on){nativeStop()}else{nativeLoop()}return}
- if(!SR){kbVoice();return}
- if(on){on=false;rec&&rec.stop();return}
+   if(fails>=3||/permission|not available|network|server/i.test(m)){held=false;ui();
+    msg(/network|server/i.test(m)?'Sin conexión para el reconocimiento de voz. Revisá internet o descargá el idioma español offline en Ajustes de Google.':'Micrófono no disponible ('+m+'). Usá el campo de texto.');break}
+   await wait(300)}}
+ busy=false;ui()}
+function pressStart(){
+ if(held)return;held=true;ui();
+ if(NSR){nativeHold();return}
+ if(!SR){held=false;ui();kbVoice();return}
  rec=new SR();rec.lang='es-AR';rec.continuous=true;rec.interimResults=false;
  rec.onresult=function(e){for(var i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)handle(e.results[i][0].transcript)};
- rec.onerror=function(e){on=false;ui();msg('Micrófono no disponible ('+e.error+'). Usá el micrófono del teclado en el campo de texto.');$('txt').focus()};
- rec.onend=function(){if(on){try{rec.start()}catch(x){}}else ui()};
- try{rec.start();on=true;ui()}catch(x){msg('No se pudo iniciar el micrófono.')}};
-function ui(){var b=$('mic');b.className='mic'+(on?' on':'');b.textContent=on?'⏹ Escuchando…':'🎤 Grabar'}
+ rec.onerror=function(e){if(e.error==='no-speech'||e.error==='aborted')return;held=false;ui();msg('Micrófono no disponible ('+e.error+'). Usá el micrófono del teclado en el campo de texto.');$('txt').focus()};
+ rec.onend=function(){if(held){try{rec.start()}catch(x){}}else ui()};
+ try{rec.start()}catch(x){held=false;ui();msg('No se pudo iniciar el micrófono.')}}
+function pressEnd(){
+ if(!held)return;held=false;ui();
+ if(NSR){try{NSR.stop()}catch(e){}}else if(rec){try{rec.stop()}catch(e){}}}
+var MB=$('mic');
+MB.addEventListener('pointerdown',function(e){e.preventDefault();try{MB.setPointerCapture(e.pointerId)}catch(x){}pressStart()});
+['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){MB.addEventListener(ev,pressEnd)});
+MB.addEventListener('contextmenu',function(e){e.preventDefault()});
+$('mic').textContent='🎤 Mantené para hablar';
+/* cargas que llegan desde "Control de carga": el interno queda como cargado */
+function applyPending(){var q=[];try{q=JSON.parse(localStorage.getItem('playa_pend')||'[]')}catch(e){}
+ if(!q.length)return 0;var n=0;
+ q.forEach(function(x){if(!x||!x.i)return;if(!S.b[x.i])S.b[x.i]={line:x.l||'Sin línea'};var o=S.b[x.i];o.st='C';delete o.loc;o.new=true;o.ts=x.ts||Date.now();n++});
+ try{localStorage.removeItem('playa_pend')}catch(e){}save();return n}
+window.addEventListener('message',function(e){if(e.data&&e.data.t==='playa-sync'){var n=applyPending();if(n){render();msg('✔ '+n+' cargado'+(n>1?'s':'')+' desde Control de carga')}}});
 function render(){
  var ks=Object.keys(S.b),c={C:0,F:0,S:0,N:0,X:0};
  ks.forEach(function(k){var o=S.b[k];if(o.loc)c.X++;if(o.st)c[o.st]++;if(o.new)c.N++});
@@ -177,5 +192,6 @@ $('save').onclick=function(){var nb={};
   ns.forEach(function(n){nb[n]=S.b[n]||{};nb[n].line=l})});
  Object.keys(S.b).forEach(function(k){if(nb[k]){nb[k].st=S.b[k].st;nb[k].new=S.b[k].new;nb[k].ts=S.b[k].ts;if(S.b[k].loc)nb[k].loc=S.b[k].loc}});S.b=nb;save();render();$('dlg').close()};
 $('reset').onclick=function(){$('dlg').close();ask('¿Borrar todos los estados y ubicaciones (empezar turno)? La lista queda igual.',function(){Object.keys(S.b).forEach(function(k){S.b[k].st='';S.b[k].new=false;delete S.b[k].loc});save();render()})};
+applyPending();
 render();
 </script></body></html>

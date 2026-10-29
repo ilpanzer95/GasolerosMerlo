@@ -28,7 +28,7 @@ iframe.a{display:block}
  <button class="card" data-k="cierre"><span class="ic">⛽</span><span><b>Cierre nocturno</b><small>Surtidores y telemedición</small></span></button>
 </div>
 <div id="v"></div>
-<div id="sig">by: Panzer · v2.0</div>
+<div id="sig">by: Panzer · v2.1</div>
 <script>
 var T={playa:'playa.html',descarga:'descarga.html',cierre:'cierre.html',carga:'carga.html'};
 var menu=document.getElementById('menu'),bar=document.getElementById('bar'),v=document.getElementById('v');
@@ -50,6 +50,8 @@ function goBack(){
  try{if(f&&f.contentWindow.__back&&f.contentWindow.__back())return}catch(e){}
  showMenu();if(history.state&&history.state.k)try{history.back()}catch(e){}}
 if(CAPA&&CAPA.addListener)CAPA.addListener('backButton',goBack);
+/* Control de carga avisa a Control de playa (si ya está abierto) que hay internos cargados */
+window.addEventListener('message',function(e){if(e.data&&e.data.t==='playa-sync'){var f=document.getElementById('f_playa');if(f&&f.contentWindow)try{f.contentWindow.postMessage({t:'playa-sync'},'*')}catch(x){}}});
 window.addEventListener('popstate',function(e){if(e.state&&e.state.k)openTool(e.state.k,false);else showMenu()});
 
 </script></body></html>

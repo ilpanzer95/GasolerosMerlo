@@ -200,7 +200,10 @@ function renderSem(){
   else{nt.className='note no';nt.textContent=Q+' no cargó en los últimos '+WD+' días.'}}
  else{nt.className='note no';nt.textContent=''}}
 function render(){if(TAB==='dia')renderDia();else renderSem()}
-function addRow(x){x.f=today();x.h=x.h||hh();x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);save();render()}
+/* lo que carga combustible queda como "cargado" en Control de playa (se anota en una cola y se avisa al hub) */
+function toPlaya(x){if(!x.c)return;try{var q=JSON.parse(localStorage.getItem('playa_pend')||'[]');q.push({i:x.i,l:LINE[x.i]||'',ts:Date.now()});localStorage.setItem('playa_pend',JSON.stringify(q.slice(-500)))}catch(e){}
+ try{window.parent.postMessage({t:'playa-sync'},'*')}catch(e){}}
+function addRow(x){x.f=today();x.h=x.h||hh();x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);save();toPlaya(x);render()}
 function dupMsg(i){var cd=curDay();return S.rows.filter(function(x){return x.i===i&&op(x).d===cd}).length>1?' (ojo: ya cargó hoy)':''}
 
 /* ---------- carga a mano ---------- */
@@ -288,6 +291,8 @@ function handle(t){
 var CAP=(function(){try{var c=window.parent&&window.parent.Capacitor||window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()?c:null}catch(e){return null}})();
 var NSR=CAP&&CAP.Plugins&&CAP.Plugins.SpeechRecognition,SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,held=false,busy=false;
 function ui(){var b=$('mic');b.className='mic'+(held?' on':'');b.textContent=held?'🎤 Hablá… soltá para enviar':'🎤 Mantené para hablar'}
+/* de las varias interpretaciones del reconocedor, elige la que tiene más internos de la lista */
+function pick(ms){if(!ms||!ms.length)return '';var best=ms[0],bs=-1;ms.forEach(function(t){var sc=0;(String(t).match(/\b\d{4}\b/g)||[]).forEach(function(x){if(LINE[x])sc++});if(sc>bs){bs=sc;best=t}});return best}
 function wait(ms){return new Promise(function(z){setTimeout(z,ms)})}
 async function nativeHold(){
  if(busy)return;busy=true;
@@ -296,8 +301,8 @@ async function nativeHold(){
   var av=await NSR.available();if(!av.available){msg('Este celular no tiene reconocimiento de voz. Actualizá la app Google.',1);busy=false;held=false;ui();return}
  }catch(e){msg('No se pudo preparar el micrófono: '+(e.message||e),1);busy=false;held=false;ui();return}
  var fails=0;
- while(held){try{var r=await NSR.start({language:'es-AR',maxResults:1,partialResults:false,popup:false});fails=0;
-   var t=(r&&r.matches&&r.matches[0])||'';if(t)handle(t)}
+ while(held){try{var r=await NSR.start({language:'es-AR',maxResults:5,partialResults:false,popup:false});fails=0;
+   var t=pick(r&&r.matches);if(t)handle(t)}
   catch(e){var m=String(e&&e.message||e);
    if(/no match|no speech|didn.t understand|busy|client side/i.test(m)){if(held)await wait(200);continue}
    fails++;if(fails>=3||/permission|not available|network|server/i.test(m)){held=false;ui();
