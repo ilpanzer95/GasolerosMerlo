@@ -17,6 +17,27 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 #bar button{border:0;border-radius:10px;padding:10px 16px;font-size:16px;font-weight:700;background:#f5c518;color:#12161a}
 #v{flex:1;position:relative;display:none}
 #sig{text-align:center;font-size:12px;color:#5b6573;padding:6px 0 10px;letter-spacing:.04em}
+#menu{overflow-y:auto;justify-content:flex-start}
+#menu>:first-child{margin-top:auto}#menu>:last-child{margin-bottom:auto}
+#acct{display:none;flex-direction:column;gap:10px}#acct.on{display:flex}
+.pill{background:#1c222b;border-radius:14px;padding:12px 14px;font-size:14px;color:#c9d0da;line-height:1.4}.pill b{color:#f5c518}
+.pill a{text-decoration:underline;color:#8b95a1;cursor:pointer}
+.rw{display:flex;gap:8px}
+.tbtn{flex:1;border:0;border-radius:12px;padding:14px 6px;font:inherit;font-size:15px;font-weight:700;background:#262e3a;color:#eef1f5}
+.tbtn small{display:block;font-weight:400;font-size:11px;color:#98a1ae;margin-top:2px}
+.tbtn.sug{outline:2px solid #f5c518}.tbtn.go{background:#f5c518;color:#12161a}.tbtn.red{background:#3a2326;color:#ff9a8f}
+.lnks{display:flex;justify-content:center;gap:18px;font-size:13px;color:#8b95a1;flex-wrap:wrap}.lnks a{text-decoration:underline;cursor:pointer}
+.ov{position:fixed;inset:0;z-index:50;background:#12161a;display:none;flex-direction:column;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow:auto;box-sizing:border-box}
+.ov.on{display:flex}
+.ov h2{margin:0 0 4px;font-size:21px}.ov .sub{color:#98a1ae;font-size:13px;margin:0 0 14px}
+.ov label{display:block;font-size:12px;color:#98a1ae;margin:10px 0 4px}
+.ov input{width:100%;box-sizing:border-box;background:#0d1115;border:1px solid #2a323b;color:#eef1f5;font-size:18px;padding:13px;border-radius:10px;font-family:inherit}
+.ov .err{color:#ff8a7e;font-size:14px;min-height:18px;margin:10px 0 0}.ov .ok{color:#6fd49a;font-size:14px;margin:10px 0 0}
+.ov .big{width:100%;margin-top:14px;border:0;border-radius:12px;padding:15px;font:inherit;font-size:17px;font-weight:700;background:#f5c518;color:#12161a}
+.ov .alt{display:block;text-align:center;margin-top:14px;color:#98a1ae;font-size:14px;text-decoration:underline}
+.ov .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.ov .top button{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:700;background:#262e3a;color:#eef1f5}
+.it{border-bottom:1px solid #232b35;padding:10px 2px;font-size:13px;line-height:1.4;color:#c9d0da}.it small{color:#8b95a1;display:block}.it b{color:#eef1f5}
+.it .acts{display:flex;gap:6px;margin-top:6px}.it .acts button{border:0;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;font-weight:700;background:#262e3a;color:#eef1f5}.it .acts .ap{background:#2f8f5b}.it .acts .bj{background:#3a2326;color:#ff9a8f}
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#fff}
 iframe.a{display:block}
 </style></head><body>
@@ -26,18 +47,23 @@ iframe.a{display:block}
  <button class="card" data-k="playa"><span class="ic">🚌</span><span><b>Control de playa</b><small>Cargados y faltantes</small></span></button>
  <button class="card" data-k="descarga"><span class="ic">🚛</span><span><b>Cuenta de descarga</b><small>Descarga del camión</small></span></button>
  <button class="card" data-k="cierre"><span class="ic">⛽</span><span><b>Cierre nocturno</b><small>Surtidores y telemedición</small></span></button>
+ <div id="acct"></div>
 </div>
 <div id="v"></div>
-<div id="sig">by: Panzer · v2.1</div>
+<div class="ov" id="ov"></div>
+<div id="sig">by: Panzer · v3.0</div>
+<script src="supabase.js"></script>
+<script src="nube.js"></script>
 <script>
 var T={playa:'playa.html',descarga:'descarga.html',cierre:'cierre.html',carga:'carga.html'};
 var menu=document.getElementById('menu'),bar=document.getElementById('bar'),v=document.getElementById('v');
 var sig=document.getElementById('sig');
 function showMenu(){sig.style.display='block';menu.style.display='flex';bar.style.display='none';v.style.display='none';
  Array.prototype.forEach.call(v.children,function(f){f.className=''})}
+function ensureFrame(k){var f=document.getElementById('f_'+k);if(!f){f=document.createElement('iframe');f.id='f_'+k;f.src=T[k];f.setAttribute('allow','microphone; clipboard-write');v.appendChild(f)}return f}
 function openTool(k,push){sig.style.display='none';menu.style.display='none';bar.style.display='block';v.style.display='block';
  Object.keys(T).forEach(function(x){var f=document.getElementById('f_'+x);
-  if(x===k&&!f){f=document.createElement('iframe');f.id='f_'+x;f.src=T[x];f.setAttribute('allow','microphone; clipboard-write');v.appendChild(f)}
+  if(x===k&&!f)f=ensureFrame(x);
   if(f)f.className=x===k?'a':''});
  if(push)history.pushState({k:k},'')}
 Array.prototype.forEach.call(document.querySelectorAll('.card'),function(b){b.onclick=function(){openTool(b.dataset.k,true)}});
@@ -45,6 +71,7 @@ document.getElementById('back').onclick=function(){if(history.state&&history.sta
 /* Botón/gesto "atrás" del celular (APK): primero cierra la pantalla completa de la herramienta, después vuelve al menú, y recién en el menú sale de la app */
 var CAPA=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
 function goBack(){
+ if(ov.classList.contains('on')&&LOGIN_OK){closeModal();return}
  if(menu.style.display!=='none'){if(CAPA&&CAPA.exitApp)CAPA.exitApp();return}
  var f=v.querySelector('iframe.a');
  try{if(f&&f.contentWindow.__back&&f.contentWindow.__back())return}catch(e){}
@@ -52,6 +79,111 @@ function goBack(){
 if(CAPA&&CAPA.addListener)CAPA.addListener('backButton',goBack);
 /* Control de carga avisa a Control de playa (si ya está abierto) que hay internos cargados */
 window.addEventListener('message',function(e){if(e.data&&e.data.t==='playa-sync'){var f=document.getElementById('f_playa');if(f&&f.contentWindow)try{f.contentWindow.postMessage({t:'playa-sync'},'*')}catch(x){}}});
+
+/* ===== Cuenta, turno, registro de cambios y administración (base compartida) ===== */
+var N=window.Nube,ov=document.getElementById('ov'),acct=document.getElementById('acct'),LOGIN_OK=true,SKIP=false,QU='';
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function p2(x){return ('0'+x).slice(-2)}
+function hora(iso){var d=new Date(iso);return p2(d.getHours())+':'+p2(d.getMinutes())}
+function fechaHora(iso){var d=new Date(iso);return p2(d.getDate())+'/'+p2(d.getMonth()+1)+' '+hora(iso)}
+function modal(html,cerrable){ov.innerHTML=html;ov.classList.add('on');LOGIN_OK=cerrable!==false}
+function closeModal(){ov.classList.remove('on');ov.innerHTML=''}
+function sugerido(){var h=new Date().getHours();return h>=6&&h<14?'TM':h>=14&&h<19?'TT':'TN'}
+
+function showLogin(msg){
+ modal('<h2>Gasoleros Metropol</h2><p class="sub">Ingresá con tu legajo y contraseña</p>'+
+  '<label>Legajo</label><input id="lg" inputmode="numeric" autocomplete="username">'+
+  '<label>Contraseña</label><input id="pw" type="password" autocomplete="current-password">'+
+  '<div class="err" id="er">'+(msg?esc(msg):'')+'</div><button class="big" id="go">Ingresar</button>'+
+  '<a class="alt" id="nw">Crear cuenta</a><a class="alt" id="sk">Seguir sin cuenta (solo herramientas locales)</a>');
+ $('go').onclick=async function(){var l=$('lg').value.trim(),p=$('pw').value;if(!l||!p){$('er').textContent='Completá legajo y contraseña.';return}
+  $('go').disabled=true;$('er').textContent='Ingresando…';
+  try{await N.login(l,p);closeModal();afterLogin()}catch(e){$('er').textContent=e.message;$('go').disabled=false}};
+ $('pw').onkeydown=function(e){if(e.key==='Enter')$('go').click()};
+ $('nw').onclick=showRegistro;$('sk').onclick=function(){SKIP=true;closeModal()};}
+function showRegistro(){
+ modal('<h2>Crear cuenta</h2><p class="sub">Un administrador tiene que aprobarla antes de que puedas cargar.</p>'+
+  '<label>Legajo (solo números)</label><input id="lg" inputmode="numeric">'+
+  '<label>Nombre y apellido</label><input id="nm" autocomplete="name">'+
+  '<label>Contraseña (mínimo 6)</label><input id="pw" type="password" autocomplete="new-password">'+
+  '<label>Repetir contraseña</label><input id="p2" type="password" autocomplete="new-password">'+
+  '<div class="err" id="er"></div><button class="big" id="go">Crear cuenta</button><a class="alt" id="vb">Volver</a>');
+ $('vb').onclick=function(){showLogin()};
+ $('go').onclick=async function(){var l=$('lg').value.trim(),n=$('nm').value.trim(),p=$('pw').value;
+  if(!/^\d{3,8}$/.test(l)){$('er').textContent='El legajo son solo números (3 a 8 cifras).';return}
+  if(n.length<3){$('er').textContent='Escribí tu nombre y apellido.';return}
+  if(p.length<6){$('er').textContent='La contraseña tiene que tener al menos 6 caracteres.';return}
+  if(p!==$('p2').value){$('er').textContent='Las contraseñas no coinciden.';return}
+  $('go').disabled=true;$('er').textContent='Creando cuenta…';
+  try{await N.registrar(l,n,p);closeModal();afterLogin()}catch(e){$('er').textContent=e.message;$('go').disabled=false}};}
+function afterLogin(){renderAcct();if(N.activo())ensureFrame('carga');notifyFrames()}
+
+function notifyFrames(){var f=document.getElementById('f_carga');if(f&&f.contentWindow)try{f.contentWindow.postMessage({t:'nube-state'},'*')}catch(e){}}
+
+function renderAcct(){
+ if(!N||!N.enabled){acct.className='';return}
+ acct.className='on';
+ if(!N.logged()){acct.innerHTML='<button class="tbtn go" id="bLogin">🔐 Iniciar sesión</button><div class="pill">Para ver y cargar el <b>Control de carga</b> compartido necesitás iniciar sesión.</div>';$('bLogin').onclick=function(){showLogin()};return}
+ var p=N.perfil;if(!p){acct.innerHTML='<div class="pill">Conectando…</div>';return}
+ var h='<div class="pill">Legajo <b>'+esc(p.legajo)+'</b>'+(p.nombre?' · '+esc(p.nombre):'')+(p.rol==='admin'?' · <b>admin</b>':'')+' <a id="lSalir" style="float:right">Salir</a></div>';
+ if(!p.activo)h+='<div class="pill">⏳ Tu cuenta está <b>pendiente de aprobación</b>. Cuando un administrador la apruebe vas a poder cargar. <a id="lAct">Actualizar</a></div>';
+ else if(N.enTurno())h+='<div class="pill">🟢 En turno <b>'+esc(N.turno.turno)+'</b> hasta las '+hora(N.turno.fin_prog)+'. Lo que cargues queda con tu legajo.</div><button class="tbtn red" id="bFin">Terminar turno</button>';
+ else{var s=sugerido();h+='<div class="pill">🔒 Solo lectura. Para cargar, entrá en tu turno:</div><div class="rw">'+
+  [['TM','06–14'],['TT','14–19'],['TN','19–06']].map(function(t){return '<button class="tbtn'+(t[0]===s?' sug':'')+'" data-t="'+t[0]+'">'+t[0]+'<small>'+t[1]+'</small></button>'}).join('')+'</div>'}
+ if(p.activo)h+='<div class="pill" id="quien">En turno ahora: …</div>';
+ h+='<div class="lnks">'+(p.activo?'<a id="lAud">Registro de cambios</a>':'')+(N.admin()?'<a id="lAdm">Administrar</a>':'')+'<a id="lClv">Cambiar contraseña</a></div><div class="pill" id="aMsg" style="display:none"></div>';
+ acct.innerHTML=h;
+ function aviso(t){var m=$('aMsg');m.style.display='block';m.textContent=t}
+ if($('lSalir'))$('lSalir').onclick=async function(){if(confirm('¿Cerrar sesión?')){await N.salir();renderAcct();notifyFrames()}};
+ if($('lAct'))$('lAct').onclick=function(){N.refresh()};
+ if($('bFin'))$('bFin').onclick=async function(){try{await N.terminarTurno();notifyFrames()}catch(e){aviso(e.message)}};
+ Array.prototype.forEach.call(acct.querySelectorAll('[data-t]'),function(b){b.onclick=async function(){try{await N.iniciarTurno(b.dataset.t);notifyFrames()}catch(e){aviso(e.message)}}});
+ if($('lAud'))$('lAud').onclick=showAud;if($('lAdm'))$('lAdm').onclick=showAdm;
+ if($('lClv'))$('lClv').onclick=async function(){var c=prompt('Nueva contraseña (mínimo 6 caracteres):');if(!c)return;try{await N.cambiarClave(c);aviso('✔ Contraseña cambiada.')}catch(e){aviso(e.message)}};
+ if(p.activo)N.quienEnTurno().then(function(L){var q=$('quien');if(q)q.innerHTML=L.length?'En turno ahora: '+L.map(function(x){return '<b>'+esc(x.legajo)+'</b> ('+esc(x.turno)+')'}).join(' · '):'En turno ahora: nadie'}).catch(function(){var q=$('quien');if(q)q.textContent='En turno ahora: sin conexión'})}
+
+function litros(d){var o=[];if(+d.comb)o.push(d.comb+' L');if(+d.aceite)o.push('aceite '+d.aceite);if(+d.urea)o.push('urea '+d.urea);if(+d.refr)o.push('refr. '+d.refr);if(d.obs)o.push('"'+d.obs+'"');return o.join(', ')||'sin litros'}
+function descAud(a){var d=a.despues||{},b=a.antes||{},t=a.accion;
+ if(a.tabla==='cargas'){
+  if(t==='ALTA')return 'cargó el <b>'+esc(d.interno)+'</b>: '+esc(litros(d));
+  if(t==='BORRADO')return 'borró la carga del <b>'+esc(d.interno)+'</b> ('+esc(litros(b))+')';
+  var ch=[['interno','interno'],['comb','comb.'],['aceite','aceite'],['urea','urea'],['refr','refr.'],['obs','obs.']].filter(function(k){return String(b[k[0]])!==String(d[k[0]])}).map(function(k){return k[1]+' '+esc(b[k[0]])+' → '+esc(d[k[0]])});
+  return 'modificó el <b>'+esc(d.interno)+'</b>: '+(ch.join(', ')||'sin cambios')}
+ if(t==='INICIO_TURNO')return 'inició turno <b>'+esc(d.turno)+'</b>';
+ if(t==='FIN_TURNO')return 'terminó su turno';
+ if(t==='ALTA_USUARIO')return 'se registró ('+esc(a.detalle||'')+')';
+ if(t==='CAMBIO_USUARIO'){var c=[];if(b.activo!==d.activo)c.push(d.activo?'habilitó':'dio de baja');if(b.rol!==d.rol)c.push('rol '+esc(b.rol)+' → '+esc(d.rol));return c.join(' y ')+' al legajo <b>'+esc(d.legajo)+'</b>'}
+ return esc(t)}
+async function showAud(){
+ modal('<div class="top"><h2>Registro de cambios</h2><button id="cx">Cerrar</button></div><p class="sub">Quién hizo qué y cuándo. Nadie puede editarlo ni borrarlo.</p><input id="fq" inputmode="search" placeholder="Filtrar por legajo o interno…"><div id="lst" class="sub">Cargando…</div>');
+ $('cx').onclick=closeModal;var rows=[];
+ function pintar(){var q=$('fq').value.trim().toLowerCase();var L=rows.filter(function(a){return !q||(a.legajo||'').toLowerCase().indexOf(q)>=0||JSON.stringify(a.despues||{}).toLowerCase().indexOf(q)>=0});
+  $('lst').innerHTML=L.length?L.map(function(a){return '<div class="it"><small>'+fechaHora(a.ts)+' · legajo <b>'+esc(a.legajo||'sistema')+'</b></small>'+descAud(a)+'</div>'}).join(''):'Sin registros.'}
+ $('fq').oninput=pintar;
+ try{rows=await N.auditoria(300);pintar()}catch(e){$('lst').textContent=e.message}}
+async function showAdm(){
+ modal('<div class="top"><h2>Administrar usuarios</h2><button id="cx">Cerrar</button></div><p class="sub">Aprobá a quien se registró y elegí quién es administrador.</p><div id="lst" class="sub">Cargando…</div><div class="err" id="er"></div>');
+ $('cx').onclick=closeModal;
+ async function cargar(){try{var L=await N.usuarios();L.sort(function(a,b){return (a.activo-b.activo)||(a.legajo-b.legajo)});
+  $('lst').innerHTML=L.map(function(u){var yo=N.perfil&&u.id===N.perfil.id;
+   return '<div class="it"><b>'+esc(u.legajo)+'</b> · '+esc(u.nombre||'sin nombre')+' · '+(u.activo?'habilitado':'<b style="color:#f5c518">PENDIENTE</b>')+(u.rol==='admin'?' · admin':'')+
+    (yo?'<small>(sos vos)</small>':'<div class="acts">'+(u.activo?'<button class="bj" data-a="baja" data-id="'+u.id+'" data-r="'+u.rol+'">Dar de baja</button><button data-a="rol" data-id="'+u.id+'" data-r="'+u.rol+'">'+(u.rol==='admin'?'Quitar admin':'Hacer admin')+'</button>':'<button class="ap" data-a="alta" data-id="'+u.id+'" data-r="'+u.rol+'">Aprobar</button>')+'</div>')+'</div>'}).join('')||'Sin usuarios.';
+  Array.prototype.forEach.call($('lst').querySelectorAll('button[data-a]'),function(b){b.onclick=async function(){var a=b.dataset.a,r=b.dataset.r;
+   try{b.disabled=true;if(a==='alta')await N.setUsuario(b.dataset.id,true,r);else if(a==='baja'){if(!confirm('¿Dar de baja este usuario?')){b.disabled=false;return}await N.setUsuario(b.dataset.id,false,r)}else await N.setUsuario(b.dataset.id,true,r==='admin'?'usuario':'admin');cargar()}catch(e){$('er').textContent=e.message;b.disabled=false}}})}
+  catch(e){$('lst').textContent=e.message}}
+ cargar()}
+
+if(N&&N.enabled){
+ N.on(function(){renderAcct();notifyFrames()});
+ window.addEventListener('message',function(e){if(e.data&&e.data.t==='nube-login')showLogin()});
+ N.refresh().then(function(){
+  renderAcct();
+  if(N.logged()&&N.activo())ensureFrame('carga');
+  else if(!N.logged()&&!SKIP)showLogin();
+ });
+ setInterval(function(){if(N.logged()){if(menu.style.display!=='none')renderAcct();N.refresh()}},60000);
+}else{var _a=document.getElementById('acct');if(_a)_a.className=''}
 window.addEventListener('popstate',function(e){if(e.state&&e.state.k)openTool(e.state.k,false);else showMenu()});
 
 </script></body></html>
