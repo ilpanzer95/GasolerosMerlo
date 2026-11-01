@@ -39,6 +39,9 @@ td.v.bad{color:var(--bad)}
 .btnrow{display:flex;gap:10px;margin-top:10px}
 button{flex:1;border:1px solid var(--line);background:#0f1317;color:var(--ink);padding:11px;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer}
 button.primary{background:var(--diesel);border-color:var(--diesel);color:#1a1204}
+.warn{display:flex;gap:8px;align-items:center;justify-content:space-between;background:#3a2a10;border:1px solid var(--diesel-dim);color:var(--diesel);font-size:.78rem;padding:8px 10px;border-radius:8px;margin-top:8px;line-height:1.35}
+.warn[hidden]{display:none}
+.warn button{flex:none;width:auto;padding:6px 10px;font-size:.78rem}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--good);color:#0c1b13;padding:8px 16px;border-radius:20px;font-size:.85rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 .toast.show{opacity:1}
 </style>
@@ -78,6 +81,8 @@ button.primary{background:var(--diesel);border-color:var(--diesel);color:#1a1204
 <div class="field"><label>Stock inicial (A) T1</label><input type="text" inputmode="numeric" id="a1"></div>
 <div class="field"><label>Stock inicial (A) T2</label><input type="text" inputmode="numeric" id="a2"></div>
 </div>
+<div class="warn" id="wa1" hidden></div>
+<div class="warn" id="wa2" hidden></div>
 <label class="chk"><input type="checkbox" id="hasB"> Entró camión hoy (ingresos B)</label>
 <div class="row" id="bbox" hidden>
 <div class="field"><label>Ingresos (B) T1</label><input type="text" inputmode="numeric" id="b1"></div>
@@ -132,6 +137,10 @@ function calc(){
  var f1=(e1===null||d1===null)?null:e1-d1,f2=(e2===null||d2===null)?null:e2-d2;
  var k1=(t1===null||e1===null)?null:t1+b1-e1,k2=(t2===null||e2===null)?null:t2+b2-e2;
  R={a1:a1,a2:a2,b1:b1,b2:b2,v1:v1,v2:v2,d1:d1,d2:d2,e1:e1,e2:e2,f1:f1,f2:f2,k1:k1,k2:k2};
+ [[1,a1,t1],[2,a2,t2]].forEach(function(z){var w=el('wa'+z[0]);
+  if(z[1]!==null&&z[2]!==null&&Math.abs(z[1]-z[2])>50){w.hidden=false;
+   w.innerHTML='<span>⚠ Stock inicial T'+z[0]+' ('+f(z[1])+') no coincide con la telemedición de inicio ('+f(z[2])+'). Difiere '+f(z[1]-z[2])+' L.</span><button type="button" data-t="'+z[0]+'" data-v="'+z[2]+'">Usar '+f(z[2])+'</button>'}
+  else w.hidden=true});
  setd('v1',v1);setd('v2',v2);setd('e1',e1);setd('e2',e2);setd('k1',k1);setd('k2',k2);
  el('bbox').hidden=!hb;
  setd('pa1',a1);setd('pa2',a2);setd('pb1',b1);setd('pb2',b2);setd('pc1',v1);setd('pc2',v2);setd('pd1',d1);setd('pd2',d2);setd('pe1',e1);setd('pe2',e2);
@@ -152,6 +161,7 @@ function summary(){
   ln('TANQUE 1 (S1+S2)',R.a1,R.b1,R.v1,R.d1,R.e1,R.f1)+'\n\n'+
   ln('TANQUE 2 (S3+S4)',R.a2,R.b2,R.v2,R.d2,R.e2,R.f2)+'\n\nConsumo por telemedición: T1 '+f(R.k1)+' | T2 '+f(R.k2)}
 ids.forEach(function(i){el(i).addEventListener('input',function(){calc();persist()})});
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.warn button');if(b){el('a'+b.getAttribute('data-t')).value=b.getAttribute('data-v');el('hintA').textContent='';calc();persist()}});
 el('hasB').addEventListener('change',function(){calc();persist()});
 el('copy').onclick=function(){var t=summary();
  function fb(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Resumen copiado')}catch(e){toast('No se pudo copiar')}document.body.removeChild(ta)}
