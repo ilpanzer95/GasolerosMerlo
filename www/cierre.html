@@ -39,9 +39,6 @@ td.v.bad{color:var(--bad)}
 .btnrow{display:flex;gap:10px;margin-top:10px}
 button{flex:1;border:1px solid var(--line);background:#0f1317;color:var(--ink);padding:11px;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer}
 button.primary{background:var(--diesel);border-color:var(--diesel);color:#1a1204}
-.warn{display:flex;gap:8px;align-items:center;justify-content:space-between;background:#3a2a10;border:1px solid var(--diesel-dim);color:var(--diesel);font-size:.78rem;padding:8px 10px;border-radius:8px;margin-top:8px;line-height:1.35}
-.warn[hidden]{display:none}
-.warn button{flex:none;width:auto;padding:6px 10px;font-size:.78rem}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--good);color:#0c1b13;padding:8px 16px;border-radius:20px;font-size:.85rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s}
 .toast.show{opacity:1}
 </style>
@@ -81,8 +78,6 @@ button.primary{background:var(--diesel);border-color:var(--diesel);color:#1a1204
 <div class="field"><label>Stock inicial (A) T1</label><input type="text" inputmode="numeric" id="a1"></div>
 <div class="field"><label>Stock inicial (A) T2</label><input type="text" inputmode="numeric" id="a2"></div>
 </div>
-<div class="warn" id="wa1" hidden></div>
-<div class="warn" id="wa2" hidden></div>
 <label class="chk"><input type="checkbox" id="hasB"> Entró camión hoy (ingresos B)</label>
 <div class="row" id="bbox" hidden>
 <div class="field"><label>Ingresos (B) T1</label><input type="text" inputmode="numeric" id="b1"></div>
@@ -137,10 +132,6 @@ function calc(){
  var f1=(e1===null||d1===null)?null:e1-d1,f2=(e2===null||d2===null)?null:e2-d2;
  var k1=(t1===null||e1===null)?null:t1+b1-e1,k2=(t2===null||e2===null)?null:t2+b2-e2;
  R={a1:a1,a2:a2,b1:b1,b2:b2,v1:v1,v2:v2,d1:d1,d2:d2,e1:e1,e2:e2,f1:f1,f2:f2,k1:k1,k2:k2};
- [[1,a1,t1],[2,a2,t2]].forEach(function(z){var w=el('wa'+z[0]);
-  if(z[1]!==null&&z[2]!==null&&Math.abs(z[1]-z[2])>50){w.hidden=false;
-   w.innerHTML='<span>⚠ Stock inicial T'+z[0]+' ('+f(z[1])+') no coincide con la telemedición de inicio ('+f(z[2])+'). Difiere '+f(z[1]-z[2])+' L.</span><button type="button" data-t="'+z[0]+'" data-v="'+z[2]+'">Usar '+f(z[2])+'</button>'}
-  else w.hidden=true});
  setd('v1',v1);setd('v2',v2);setd('e1',e1);setd('e2',e2);setd('k1',k1);setd('k2',k2);
  el('bbox').hidden=!hb;
  setd('pa1',a1);setd('pa2',a2);setd('pb1',b1);setd('pb2',b2);setd('pc1',v1);setd('pc2',v2);setd('pd1',d1);setd('pd2',d2);setd('pe1',e1);setd('pe2',e2);
@@ -161,7 +152,6 @@ function summary(){
   ln('TANQUE 1 (S1+S2)',R.a1,R.b1,R.v1,R.d1,R.e1,R.f1)+'\n\n'+
   ln('TANQUE 2 (S3+S4)',R.a2,R.b2,R.v2,R.d2,R.e2,R.f2)+'\n\nConsumo por telemedición: T1 '+f(R.k1)+' | T2 '+f(R.k2)}
 ids.forEach(function(i){el(i).addEventListener('input',function(){calc();persist()})});
-document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.warn button');if(b){el('a'+b.getAttribute('data-t')).value=b.getAttribute('data-v');el('hintA').textContent='';calc();persist()}});
 el('hasB').addEventListener('change',function(){calc();persist()});
 el('copy').onclick=function(){var t=summary();
  function fb(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Resumen copiado')}catch(e){toast('No se pudo copiar')}document.body.removeChild(ta)}
@@ -175,56 +165,6 @@ el('clear').onclick=function(){
  try{localStorage.removeItem(KEY)}catch(e){}
  load();calc();persist()};
 load();calc();
-</script>
-<script>
-/* ===== Botón de info (ⓘ) al final ===== */
-/* Botón de info para el Cierre nocturno: explica qué es cada dato.
-   Para cambiar un texto, editá la lista INFO de abajo. No toca ninguna cuenta. */
-(function(){
- var INFO=[
-  ['1) Surtidores',[
-   ['Inicio / Cierre','Lectura del contador de cada surtidor (S1 a S4) al empezar y al terminar. La diferencia, cierre − inicio, es lo que vendió ese surtidor.'],
-   ['Venta Tanque 1 / 2','Tanque 1 = S1 + S2. Tanque 2 = S3 + S4. Es la suma de lo vendido por sus dos surtidores.']]],
-  ['2) Telemedición',[
-   ['Sondas','Sondas 1 y 2 miden el Tanque 1. Sondas 3 y 4 miden el Tanque 2. Cada tanque se mide sumando sus dos sondas.'],
-   ['Inicio (opcional)','Lectura de las sondas al empezar. Solo sirve para calcular el consumo por telemedición.'],
-   ['Final / Medición final (E)','Lectura de las sondas al cerrar, ahora. La medición final de un tanque es la suma de sus dos sondas.'],
-   ['Consumo telemedición','Lo que bajó el tanque según las sondas: inicio + ingresos − final.']]],
-  ['3) Planilla',[
-   ['A · Stock inicial','Stock de combustible resultado del cierre de la noche anterior. Se completa solo con la medición final que guardaste ayer; si hace falta, lo podés corregir.'],
-   ['B · Ingresos','Litros que entraron por camión durante el período. Solo se carga si tildás "Entró camión hoy".'],
-   ['Aviso naranja del stock inicial','Aparece si el stock inicial (A) difiere en más de 50 L de la suma de las sondas de inicio del tanque. El botón "Usar …" reemplaza A por esa medición. Sirve para detectar un stock inicial mal cargado o desactualizado.'],
-   ['C · Consumos','Lo vendido por los surtidores de ese tanque (la Venta de arriba).'],
-   ['D · Stock esperado','D = A + B − C. Lo que debería haber en el tanque según lo que entró y lo que se vendió.'],
-   ['E · Medición final','Lo que realmente marcan las sondas ahora (telemedición).'],
-   ['E − D · Diferencia','Lo medido menos lo esperado. Si pasa de 150 L (en más o en menos) se pone en rojo: puede ser un surtidor trabado, un error de lectura o una pérdida.']]],
-  ['Botones',[
-   ['Guardar cierre','La medición final (E) queda guardada y mañana se carga sola como stock inicial (A).'],
-   ['Nuevo cierre','Borra todo lo cargado para empezar uno nuevo. El stock inicial se vuelve a tomar del último cierre guardado.']]]
- ];
- function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
- var css=document.createElement('style');
- css.textContent='.ib{display:block;margin:18px auto 4px;width:30px;height:30px;padding:0;border-radius:50%;flex:none;font-size:.85rem;font-weight:700;color:var(--muted,#8b95a1);background:transparent;border:1px solid var(--line,#2a323b)}'+
- '.ibl{text-align:center;font-size:.66rem;color:var(--muted,#8b95a1);margin:0 0 8px}'+
- '.iov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}'+
- '.iov.on{display:flex}'+
- '.isheet{width:100%;max-width:520px;max-height:86vh;overflow:auto;background:var(--panel,#1a2027);border:1px solid var(--line,#2a323b);border-radius:14px 14px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px))}'+
- '.isheet h3{font-size:1rem;margin:0 0 4px}.isheet h4{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--diesel,#d9a441);margin:16px 0 6px}'+
- '.isheet dt{font-weight:700;font-size:.88rem;margin-top:8px}.isheet dd{margin:2px 0 0;font-size:.84rem;line-height:1.45;color:var(--muted,#8b95a1)}'+
- '.isheet .x{display:block;width:100%;margin-top:16px}';
- document.head.appendChild(css);
- var body='<h3>¿Qué es cada dato?</h3>'+INFO.map(function(g){return '<h4>'+esc(g[0])+'</h4><dl style="margin:0">'+g[1].map(function(r){return '<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'</dl>'}).join('')+'<button class="x" id="ix">Cerrar</button>';
- var ov=document.createElement('div');ov.className='iov';ov.innerHTML='<div class="isheet" role="dialog" aria-label="Información">'+body+'</div>';
- document.body.appendChild(ov);
- var b=document.createElement('button');b.className='ib';b.id='ib';b.setAttribute('aria-label','Información sobre cada dato');b.textContent='i';
- var l=document.createElement('p');l.className='ibl';l.textContent='Info';
- var w=document.querySelector('.wrap')||document.body;w.appendChild(b);w.appendChild(l);
- function open(){ov.classList.add('on')}function close(){ov.classList.remove('on')}
- b.onclick=open;ov.onclick=function(e){if(e.target===ov||e.target.id==='ix')close()};
- /* el botón/gesto "atrás" del celular cierra la info antes de salir de la herramienta */
- window.__back=function(){if(ov.classList.contains('on')){close();return true}return false};
-})();
-
 </script>
 </body>
 </html>

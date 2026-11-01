@@ -87,7 +87,7 @@ td small.ed{display:block;font-size:.6rem;color:var(--mut)}
  <div class="mode" id="mode"></div>
  <div class="form" id="man">
   <div class="row"><div class="f"><label>Interno</label><input id="int" type="text" inputmode="numeric" maxlength="4" placeholder="1834" autocomplete="off"></div>
-   <div class="f"><label>Combustible (L)</label><input id="comb" type="text" inputmode="decimal" autocomplete="off"></div></div>
+   <div class="f"><label>Combustible</label><input id="comb" type="text" inputmode="decimal" autocomplete="off"></div></div>
   <div class="chips">
    <button class="chip" data-o="a">＋ Aceite</button><button class="chip" data-o="u">＋ Urea</button><button class="chip" data-o="r">＋ Refr.</button><button class="chip" data-o="h">＋ Hidráulico</button>
   </div>
@@ -132,6 +132,8 @@ var KEY=CLOUD?'cargas_cloud_v1':'cargas_v3',S={rows:[],q:[],leg:''},$=function(i
 try{var r=localStorage.getItem(KEY)||(CLOUD?null:localStorage.getItem('cargas_v2'));if(r)S=JSON.parse(r)}catch(e){}
 S.q=S.q||[];S.rows=S.rows||[];
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+/* combustible: "44,198" o "44.198" se toma como 44198 (formato del surtidor); "12,5" sigue siendo decimal */
+function nc(v){v=String(v==null?'':v).trim();if(/^\d{1,3}[.,]\d{3}$/.test(v))return parseInt(v.replace(/[.,]/,''),10);return n(v)}
 function n(v){v=String(v==null?'':v).trim().replace(',','.');var x=parseFloat(v);return isNaN(x)?0:x}
 function fm(x){return x.toLocaleString('es-AR',{maximumFractionDigits:2})}
 function p2(v){return ('0'+v).slice(-2)}
@@ -220,8 +222,18 @@ function fwdPlaya(x){if(!x.c||!x.id||op(x).d!==curDay())return false;var F={};tr
  if(F[x.id])return false;F[x.id]=1;var ks=Object.keys(F);if(ks.length>600)ks.slice(0,ks.length-400).forEach(function(k){delete F[k]});try{localStorage.setItem('playa_fwd',JSON.stringify(F))}catch(e){}return qPlaya(x)}
 function addRow(x){
  if(CLOUD){var t=new Date();x.id=uid();x.ts=t.toISOString();x.f=dstr(t);x.h=p2(t.getHours())+':'+p2(t.getMinutes());x.l=(NB.perfil&&NB.perfil.legajo)||'';x.ed='';
-  x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);S.q.push({op:'ins',id:x.id});save();if(fwdPlaya(x))postPlaya();render();flush();return}
+  x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);S.q.push({op:'ins',id:x.id});save();render();flush();return}
  x.f=today();x.h=x.h||hh();x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);save();toPlaya(x);render()}
+/* combustible: se anota como lo muestra el surtidor (44198 = 44,198 L), hasta 400000; aceite, urea y refrigerante en litros, hasta 500 */
+function lim(x){if(x.c>400000)return fm(x.c)+' de combustible es demasiado (más de 400.000). Revisalo.';
+ var o=[['a','aceite'],['u','urea'],['r','refrigerante']].filter(function(k){return x[k[0]]>500})[0];
+ return o?fm(x[o[0]])+' L de '+o[1]+' es demasiado (máx. 500). Revisalo.':''}
+function humanErr(m){m=String(m||'');
+ if(/cargas_comb_check/.test(m))return 'combustible fuera de rango (máx. 999.999)';
+ if(/cargas_(aceite|urea|refr)_check/.test(m))return 'aceite, urea o refrigerante fuera de rango (máx. 500 L)';
+ if(/cargas_interno_check/.test(m))return 'el interno tiene que ser de 4 cifras';
+ if(/row-level security|RLS|sin permiso/i.test(m))return 'no tenés un turno activo';
+ return m||'rechazado'}
 function dupMsg(i){var cd=curDay();return S.rows.filter(function(x){return x.i===i&&op(x).d===cd}).length>1?' (ojo: ya cargó hoy)':''}
 
 /* ---------- carga a mano ---------- */
@@ -238,8 +250,9 @@ $('add').onclick=function(){
  if(it.length!==4){msg('El interno tiene que ser de 4 cifras.',1);$('int').focus();return}
  var ob=$('obs').value.trim();
  if(OPEN.h&&!/hidr/i.test(ob))ob=ob?'Hidráulico · '+ob:'Hidráulico';
- var x={i:it,c:n($('comb').value),a:OPEN.a?n($('ac').value):0,u:OPEN.u?n($('ur').value):0,r:OPEN.r?n($('re').value):0,l:CLOUD?'':$('leg').value.trim(),b:ob};
+ var x={i:it,c:nc($('comb').value),a:OPEN.a?n($('ac').value):0,u:OPEN.u?n($('ur').value):0,r:OPEN.r?n($('re').value):0,l:CLOUD?'':$('leg').value.trim(),b:ob};
  if(!x.c&&!x.a&&!x.u&&!x.r&&!ob){msg('Cargá al menos un litro o una observación.',1);return}
+ var le=lim(x);if(le){toast('✖ '+it+': '+le,1);return}
  if(ED>=0){var o=S.rows[ED];x.h=o.h;x.f=o.f;x.n=0;if(CLOUD){x.id=o.id;x.ts=o.ts;x.l=o.l;x.ed=(NB.perfil&&NB.perfil.legajo)||'';S.rows[ED]=x;enq('upd',x.id);save();flush()}else{S.rows[ED]=x;save()}toast('✔ Fila corregida');resetForm();return}
  addRow(x);toast('✔ Interno '+it+' agregado'+dupMsg(it));resetForm();$('int').focus()};
 $('cancel').onclick=resetForm;
@@ -286,11 +299,11 @@ function parse(text,cur){
   if(obsMode&&!/^\d/.test(w)){cur=cur||blank();cur.b=(cur.b?cur.b+' ':'')+w;return}
   if(/^\d/.test(w)){
    if(f==='l'){cur=cur||blank();cur.l=w;f=null;return}
-   if(f&&f!=='O'){cur=cur||blank();cur[f]=n(w);f=null;return}
+   if(f&&f!=='O'){cur=cur||blank();cur[f]=f==='c'?nc(w):n(w);f=null;return}
    var isInt=/^\d{4}$/.test(w);
    if(!cur||!cur.i){cur=cur||blank();if(isInt)cur.i=w;else cur.c=n(w);return}
-   if(isInt){if(cur.c||cur.a||cur.u||cur.r){done();cur=blank()}cur.i=w;return}
-   if(!cur.c)cur.c=n(w);return}
+   if(isInt&&(LINE[w]||cur.c||cur.a||cur.u||cur.r)){if(cur.c||cur.a||cur.u||cur.r){done();cur=blank()}cur.i=w;return}
+   if(!cur.c)cur.c=nc(w);return}
   for(var k=0;k<KW.length;k++)if(KW[k][0].test(w)){var c=KW[k][1];
    if(c==='H'){cur=cur||blank();if(!/Hidr/.test(cur.b))ob('Hidráulico')}
    else if(c==='T'){cur=cur||blank();if(!/Taller/.test(cur.b))ob('Taller')}
@@ -304,11 +317,13 @@ function parse(text,cur){
 function handle(t){
  var r=parse(t,P);P=r.cur;var say=[];
  if(!canWrite()){toast(roMsg(),1);return}
+ var bad=[];r.out=r.out.filter(function(x){var e=lim(x);if(e){bad.push('✖ '+x.i+': '+e);return false}return true});
  r.out.forEach(function(x){x.l=x.l||S.leg||'';addRow(x)});
- if(r.out.length){var l=r.out[r.out.length-1];say.push('✔ '+r.out.map(function(x){return x.i+(x.c?' · '+fm(x.c)+' L':'')+(x.a?' · ac '+fm(x.a):'')+(x.u?' · ur '+fm(x.u):'')+(x.r?' · re '+fm(x.r):'')}).join('  |  ')+dupMsg(l.i))}
+ bad.forEach(function(b){say.push(b)});
+ if(r.out.length){var l=r.out[r.out.length-1];say.push('✔ '+r.out.map(function(x){return x.i+(x.c?' · '+fm(x.c):'')+(x.a?' · ac '+fm(x.a):'')+(x.u?' · ur '+fm(x.u):'')+(x.r?' · re '+fm(x.r):'')}).join('  |  ')+dupMsg(l.i))}
  if(merged)say.push('✔ Sumado al '+merged);
  if(P&&P.i)say.push('Interno '+P.i+': faltan los litros…');
- if(say.length)toast(say.join('\n'),0);else toast('No entendí: "'+t+'"',1)}
+ if(say.length)toast(say.join('\n'),bad.length&&!r.out.length?1:0);else toast('No entendí: "'+t+'"',1)}
 var CAP=(function(){try{var c=window.parent&&window.parent.Capacitor||window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()?c:null}catch(e){return null}})();
 var NSR=CAP&&CAP.Plugins&&CAP.Plugins.SpeechRecognition,SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,held=false,busy=false;
 function ui(){var b=$('mic');b.className='mic'+(held?' on':'');b.textContent=held?'🎤 Hablá… soltá para enviar':'🎤 Mantené para hablar'}
@@ -351,7 +366,7 @@ M.addEventListener('contextmenu',function(e){e.preventDefault()});
 /* ---------- copiar resumen (del día) ---------- */
 $('copy').onclick=async function(){
  var rs=dayRows().map(function(o){return o.x});if(!rs.length)return;var t={c:0,a:0,u:0,r:0};
- var lines=rs.map(function(x){t.c+=x.c;t.a+=x.a;t.u+=x.u;t.r+=x.r;return x.i+(x.c?' · '+fm(x.c)+' L':'')+(x.a?' · aceite '+fm(x.a):'')+(x.u?' · urea '+fm(x.u):'')+(x.r?' · refr. '+fm(x.r):'')+(x.b?' ('+x.b+')':'')});
+ var lines=rs.map(function(x){t.c+=x.c;t.a+=x.a;t.u+=x.u;t.r+=x.r;return x.i+(x.c?' · '+fm(x.c):'')+(x.a?' · aceite '+fm(x.a):'')+(x.u?' · urea '+fm(x.u):'')+(x.r?' · refr. '+fm(x.r):'')+(x.b?' ('+x.b+')':'')});
  var s='*Cargas '+curDay().split('-').reverse().join('/')+'*\n'+lines.join('\n')+'\n\nTotal: '+rs.length+' cargas · '+fm(t.c)+' L comb.'+(t.a?' · aceite '+fm(t.a):'')+(t.u?' · urea '+fm(t.u):'')+(t.r?' · refr. '+fm(t.r):'');
  try{await navigator.clipboard.writeText(s)}catch(e){var a=document.createElement('textarea');a.value=s;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}
  toast('Resumen copiado')};
@@ -373,7 +388,7 @@ function col(i){return String.fromCharCode(65+i)}
 function cell(r,c,v,num){var ref=col(c)+r;if(v===''||v===null||v===undefined)return'';
  return num?'<c r="'+ref+'"><v>'+v+'</v></c>':'<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>'}
 function buildXlsx(rs){
- var H=['Fecha','Hora','Turno','Interno','Combustible (L)','Aceite (L)','Urea (L)','Refrigerante (L)','Legajo','Observaciones','Modificó'];
+ var H=['Fecha','Hora','Turno','Interno','Combustible','Aceite (L)','Urea (L)','Refrigerante (L)','Legajo','Observaciones','Modificó'];
  var rows=['<row r="1">'+H.map(function(h,i){return cell(1,i,h)}).join('')+'</row>'];
  rs.forEach(function(x,k){var r=k+2;
   rows.push('<row r="'+r+'">'+cell(r,0,x.f.split('-').reverse().join('/'))+cell(r,1,x.h)+cell(r,2,shiftOf(x.h))+cell(r,3,+x.i,1)+cell(r,4,x.c||'',1)+cell(r,5,x.a||'',1)+cell(r,6,x.u||'',1)+cell(r,7,x.r||'',1)
@@ -420,10 +435,10 @@ async function flush(){
    else if(o.op==='upd'){if(!x){S.q.shift();continue}res=await NB.sb.from('cargas').update({interno:x.i,comb:x.c,aceite:x.a,urea:x.u,refr:x.r,obs:x.b||''}).eq('id',x.id).select('id');if(!res.error&&!(res.data&&res.data.length))res.error={code:'RLS',message:'sin permiso (¿terminó tu turno?)'}}
    else{res=await NB.sb.from('cargas').update({borrado:true}).eq('id',o.id).select('id');if(!res.error&&!(res.data&&res.data.length))res.error={code:'RLS',message:'sin permiso (¿terminó tu turno?)'}}
    if(res.error){if(isNet(res.error)){NB.online=false;break}S.q.shift();
-    toast('No se pudo guardar'+(x?' el '+x.i:'')+': '+(res.error.message||'rechazado'),1);
+    toast('No se pudo guardar'+(x?' el '+x.i:'')+': '+humanErr(res.error.message),1);
     if(o.op==='ins'){S.rows=S.rows.filter(function(r){return r.id!==o.id})}
     save();render();pull(true);continue}
-   S.q.shift();save()}
+   S.q.shift();if(o.op==='ins'&&x&&fwdPlaya(x))postPlaya();save()}
  }catch(e){}
  FLB=false;mode();render()}
 var PUL=0,PLB=false;
