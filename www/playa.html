@@ -107,7 +107,7 @@ function refreshLock(){var N=nbx(),lock=false,why='';
 function lk(){refreshLock();if(LOCK){msg(LKMSG);return true}return false}
 setInterval(refreshLock,3000);window.addEventListener('message',function(e){if(e.data&&e.data.t==='nube-state')refreshLock()});
 function handle(t){if(lk())return;var d=parse(t),b=BAD.length?'Sin coincidencia en la lista: '+BAD.join(', ')+'. Si es un coche nuevo, agregalo en ⚙️.':'';
- if(d.length){msg('✔ '+d.length+' anotados: '+d.join(', ')+(b?' · '+b:''));save();render()}else msg(b||'No entendí números en: "'+t+'"')}
+ if(d.length){msg('✔ '+d.length+' anotados: '+d.join(', ')+(b?' · '+b:''));save();render();pushKeys(d)}else msg(b||'No entendí números en: "'+t+'"')}
 $('add').onclick=function(){var v=$('txt').value.trim();if(v){handle(v);$('txt').value=''}};
 $('txt').onkeydown=function(e){if(e.key==='Enter')$('add').click()};
 var CAP=(function(){try{var c=window.parent&&window.parent.Capacitor||window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()?c:null}catch(e){return null}})();
@@ -161,9 +161,9 @@ MB.addEventListener('contextmenu',function(e){e.preventDefault()});
 $('mic').textContent='🎤 Mantené para hablar';
 /* cargas que llegan desde "Control de carga": el interno queda como cargado */
 function applyPending(){var q=[];try{q=JSON.parse(localStorage.getItem('playa_pend')||'[]')}catch(e){}
- if(!q.length)return 0;var n=0;
- q.forEach(function(x){if(!x||!x.i)return;if(!S.b[x.i])S.b[x.i]={line:x.l||'Sin línea'};var o=S.b[x.i];o.st='C';delete o.loc;o.new=true;o.ts=x.ts||Date.now();n++});
- try{localStorage.removeItem('playa_pend')}catch(e){}save();return n}
+ if(!q.length)return 0;var n=0,ks=[];
+ q.forEach(function(x){if(!x||!x.i)return;ks.push(x.i);if(!S.b[x.i])S.b[x.i]={line:x.l||'Sin línea'};var o=S.b[x.i];o.st='C';delete o.loc;o.new=true;o.ts=x.ts||Date.now();n++});
+ try{localStorage.removeItem('playa_pend')}catch(e){}save();pushKeys(ks);return n}
 window.addEventListener('message',function(e){if(e.data&&e.data.t==='playa-sync'){var n=applyPending();if(n){render();msg('✔ '+n+' cargado'+(n>1?'s':'')+' desde Control de carga')}}});
 function render(){
  var ks=Object.keys(S.b),c={C:0,F:0,S:0,N:0,X:0};
@@ -186,19 +186,19 @@ function render(){
   b.addEventListener('contextmenu',function(e){e.preventDefault()});
   b.onclick=function(){if(lp){lp=false;return}if(lk())return;
   var o=S.b[b.dataset.n],nx={'':'C',C:'F',F:'S',S:''}[o.st||''];
-  if(nx){setSt(b.dataset.n,nx)}else{o.st='';o.new=true;o.ts=Date.now()}save();render()}})}
+  if(nx){setSt(b.dataset.n,nx)}else{o.st='';o.new=true;o.ts=Date.now()}save();render();pushKeys([b.dataset.n])}})}
 function openChip(n){if(lk())return;var o=S.b[n];$('d2t').textContent='Interno '+n+' · línea '+o.line;
  $('d2s').textContent='Ahora: '+(o.st?NAMES[o.st]:'sin dato')+(o.loc==='T'?' · en taller':o.loc==='P'?' · en otro predio':'');
  var opts=[['T','🔧 En taller'],['P','📍 Otro predio'],['X','🅿️ En playa (quitar marca)']];
  $('d2o').innerHTML=opts.map(function(x){return '<button class="btn" data-c="'+x[0]+'"'+(x[0]==='X'?' style="grid-column:span 2"':'')+'>'+x[1]+'</button>'}).join('');
  Array.prototype.forEach.call($('d2o').children,function(bt){bt.onclick=function(){var c=bt.dataset.c;
   if(c==='X')delete o.loc;else o.loc=c;
-  o.new=true;o.ts=Date.now();save();render();$('dlg2').close()}});
+  o.new=true;o.ts=Date.now();save();render();pushKeys([n]);$('dlg2').close()}});
  $('dlg2').showModal()}
 $('d2c').onclick=function(){$('dlg2').close()};
 function ask(t,fn){$('d3t').textContent=t;$('d3y').onclick=function(){$('dlg3').close();fn()};$('d3n').onclick=function(){$('dlg3').close()};$('dlg3').showModal()}
-$('clean').onclick=function(){if(lk())return;ask('¿Dejar la planilla por defecto? Se borran estados, taller/predio y cambios de lista, y vuelve la lista original.',function(){seedAll();S.filter='all';save();render();msg('Planilla restaurada.')})};
-$('done').onclick=function(){if(lk())return;Object.keys(S.b).forEach(function(k){S.b[k].new=false});save();render();msg('Resaltados borrados: ya están en la planilla.')};
+$('clean').onclick=function(){if(lk())return;ask('¿Dejar la planilla por defecto? Se borran estados, taller/predio y cambios de lista, y vuelve la lista original.',function(){var old=Object.keys(S.b);seedAll();S.filter='all';save();render();pushKeys(Object.keys(S.b),old.filter(function(k){return !S.b[k]}));msg('Planilla restaurada.')})};
+$('done').onclick=function(){if(lk())return;var ch=Object.keys(S.b).filter(function(k){return S.b[k].new});ch.forEach(function(k){S.b[k].new=false});save();render();pushKeys(ch);msg('Resaltados borrados: ya están en la planilla.')};
 
 $('cfg').onclick=function(){if(lk())return;var t='',g={};Object.keys(S.b).forEach(function(k){var l=S.b[k].line||'Sin línea';(g[l]=g[l]||[]).push(k)});
  Object.keys(g).sort().forEach(function(l){t+=l+': '+g[l].sort(function(a,b){return a-b}).join(' ')+'\n'});$('list').value=t;$('dlg').showModal()};
@@ -206,9 +206,41 @@ $('close').onclick=function(){$('dlg').close()};
 $('save').onclick=function(){if(lk())return;var nb={};
  $('list').value.split('\n').forEach(function(ln){var p=ln.split(':'),l=p.length>1?p[0].trim():'Sin línea',ns=(p.length>1?p[1]:p[0]).match(/\d{1,5}/g)||[];
   ns.forEach(function(n){nb[n]=S.b[n]||{};nb[n].line=l})});
- Object.keys(S.b).forEach(function(k){if(nb[k]){nb[k].st=S.b[k].st;nb[k].new=S.b[k].new;nb[k].ts=S.b[k].ts;if(S.b[k].loc)nb[k].loc=S.b[k].loc}});S.b=nb;save();render();$('dlg').close()};
-$('reset').onclick=function(){if(lk())return;$('dlg').close();ask('¿Borrar todos los estados y ubicaciones (empezar turno)? La lista queda igual.',function(){Object.keys(S.b).forEach(function(k){S.b[k].st='';S.b[k].new=false;delete S.b[k].loc});save();render()})};
+ Object.keys(S.b).forEach(function(k){if(nb[k]){nb[k].st=S.b[k].st;nb[k].new=S.b[k].new;nb[k].ts=S.b[k].ts;if(S.b[k].loc)nb[k].loc=S.b[k].loc}});var old=Object.keys(S.b);S.b=nb;save();render();pushKeys(Object.keys(nb),old.filter(function(k){return !nb[k]}));$('dlg').close()};
+$('reset').onclick=function(){if(lk())return;$('dlg').close();ask('¿Borrar todos los estados y ubicaciones (empezar turno)? La lista queda igual.',function(){Object.keys(S.b).forEach(function(k){S.b[k].st='';S.b[k].new=false;delete S.b[k].loc});save();render();pushKeys(Object.keys(S.b))})};
+
+/* ===== Planilla compartida en tiempo real (tabla public.playa) =====
+   - Solo quien tiene el turno abierto puede escribir (lo exige el servidor, no solo esta pantalla).
+   - Todos los usuarios aprobados ven los cambios al instante. */
+var SYNC={ready:false};
+function dbRow(k){var o=S.b[k]||{};return{interno:k,linea:o.line||'Sin línea',st:o.st||'',loc:o.loc||null,nuevo:!!o.new,baja:false,ts:o.ts||null}}
+function pushKeys(keys,bajas){
+ var N=nbx();if(!N||!N.enabled||!N.sb||LOCK||!keys)return;
+ var rows=keys.filter(function(k){return S.b[k]}).map(dbRow).concat((bajas||[]).map(function(k){return{interno:k,linea:'Sin línea',st:'',loc:null,nuevo:false,baja:true,ts:Date.now()}}));
+ if(!rows.length)return;
+ N.sb.from('playa').upsert(rows,{onConflict:'interno'}).then(function(r){
+  if(r.error){msg('⚠ No se guardó en el servidor: '+(r.error.message||'error')+'. Se recarga la planilla.');pullAll(true)}
+ }).catch(function(){msg('⚠ Sin conexión: no se guardó.');pullAll(true)})}
+function fromRow(x){var o={line:x.linea,st:x.st||'',new:!!x.nuevo,ts:x.ts};if(x.loc)o.loc=x.loc;return o}
+function applyRow(x){if(x.baja)delete S.b[x.interno];else S.b[x.interno]=fromRow(x)}
+function pullAll(force){
+ var N=nbx();if(!N||!N.enabled||!N.sb||!N.logged()||!N.activo())return;
+ N.sb.from('playa').select('*').limit(3000).then(function(r){
+  if(r.error||!r.data)return;
+  if(!r.data.length){if(!LOCK)pushKeys(Object.keys(S.b));return}   /* servidor vacío: el primero en turno sube la lista */
+  var nb={};r.data.forEach(function(x){if(!x.baja)nb[x.interno]=fromRow(x)});
+  if(JSON.stringify(nb)!==JSON.stringify(S.b)){S.b=nb;save();render()}
+ }).catch(function(){})}
+function startSync(){
+ var N=nbx();if(SYNC.ready||!N||!N.enabled||!N.sb||!N.logged()||!N.activo())return;
+ SYNC.ready=true;pullAll();
+ N.sb.channel('playa-rt').on('postgres_changes',{event:'*',schema:'public',table:'playa'},function(p){
+  var x=p.new;if(!x||!x.interno)return;applyRow(x);save();render()}).subscribe();
+}
+setInterval(function(){startSync();var N=nbx();if(SYNC.ready&&N&&N.net!==false)pullAll()},15000);
+setTimeout(startSync,1500);setTimeout(startSync,5000);
 applyPending();
 refreshLock();
 render();
+startSync();
 </script></body></html>
