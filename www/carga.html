@@ -221,7 +221,7 @@ function toPlaya(x){if(qPlaya(x))postPlaya()}
 function fwdPlaya(x){if(!x.c||!x.id||op(x).d!==curDay())return false;var F={};try{F=JSON.parse(localStorage.getItem('playa_fwd')||'{}')}catch(e){}
  if(F[x.id])return false;F[x.id]=1;var ks=Object.keys(F);if(ks.length>600)ks.slice(0,ks.length-400).forEach(function(k){delete F[k]});try{localStorage.setItem('playa_fwd',JSON.stringify(F))}catch(e){}return qPlaya(x)}
 function addRow(x){
- if(CLOUD){var t=new Date();x.id=uid();x.ts=t.toISOString();x.f=dstr(t);x.h=p2(t.getHours())+':'+p2(t.getMinutes());x.l=(NB.perfil&&NB.perfil.legajo)||'';x.ed='';
+ if(CLOUD){if(!netOK()){toast('🔴 Sin conexión: no se puede cargar hasta tener señal.',1);return}var t=new Date();x.id=uid();x.ts=t.toISOString();x.f=dstr(t);x.h=p2(t.getHours())+':'+p2(t.getMinutes());x.l=(NB.perfil&&NB.perfil.legajo)||'';x.ed='';
   x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);S.q.push({op:'ins',id:x.id});save();render();flush();return}
  x.f=today();x.h=x.h||hh();x.n=1;S.rows.forEach(function(y){y.n=0});S.rows.push(x);save();toPlaya(x);render()}
 /* combustible: se anota como lo muestra el surtidor (44198 = 44,198 L), hasta 400000; aceite, urea y refrigerante en litros, hasta 500 */
@@ -278,7 +278,7 @@ dtap($('p_dia').querySelector('.sheet'),editRow);dtap($('wk'),null);
 $('fsx').onclick=closeFS;
 $('full').onclick=function(){toggleFS(TAB==='dia'?$('p_dia').querySelector('.sheet'):$('wk'))};
 
-$('del').onclick=function(){if(ED>=0&&confirm('¿Borrar la carga del '+S.rows[ED].i+'?')){var id=S.rows[ED].id;S.rows.splice(ED,1);if(CLOUD)delRow(id);save();resetForm()}};
+$('del').onclick=function(){if(!canWrite()){toast(roMsg(),1);return}if(ED>=0&&confirm('¿Borrar la carga del '+S.rows[ED].i+'?')){var id=S.rows[ED].id;S.rows.splice(ED,1);if(CLOUD)delRow(id);save();resetForm()}};
 if(CLOUD)$('clear').style.display='none';
 $('clear').onclick=function(){var cd=curDay(),k=dayRows().length;if(k&&confirm('¿Borrar las '+k+' cargas de hoy? Exportá antes si las necesitás.')){S.rows=S.rows.filter(function(x){return op(x).d!==cd});save();resetForm()}};
 ['int','comb','ac','ur','re'].forEach(function(i){$(i).addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('add').click()}})});
@@ -315,8 +315,8 @@ function parse(text,cur){
   L.a+=cur.a;L.u+=cur.u;L.r+=cur.r;if(cur.b)L.b=L.b?L.b+' · '+cur.b:cur.b;save();if(CLOUD&&L.id){enq('upd',L.id);flush()}render();merged=L.i;cur=null}
  done();return{out:out,cur:cur}}
 function handle(t){
- var r=parse(t,P);P=r.cur;var say=[];
  if(!canWrite()){toast(roMsg(),1);return}
+ var r=parse(t,P);P=r.cur;var say=[];
  var bad=[];r.out=r.out.filter(function(x){var e=lim(x);if(e){bad.push('✖ '+x.i+': '+e);return false}return true});
  r.out.forEach(function(x){x.l=x.l||S.leg||'';addRow(x)});
  bad.forEach(function(b){say.push(b)});
@@ -422,19 +422,23 @@ $('exp').onclick=async function(){
  setTimeout(function(){URL.revokeObjectURL(u)},4000);toast('Excel descargado')};
 
 /* ================= Modo compartido (base en la nube) ================= */
-function canWrite(){return !CLOUD||!!(NB.logged()&&NB.enTurno())}
-function roMsg(){if(!NB.logged())return '🔐 Iniciá sesión desde el menú para cargar.';if(!NB.activo())return '⏳ Tu cuenta todavía no fue aprobada.';return '🔒 Solo lectura: entrá en tu turno desde el menú ("En mi turno").'}
+function netOK(){return !CLOUD||NB.net!==false}
+function canWrite(){return !CLOUD||!!(NB.logged()&&NB.enTurno()&&netOK())}
+function roMsg(){if(CLOUD&&NB.logged()&&NB.activo()&&NB.enTurno()&&!netOK())return '🔴 Sin conexión: no se puede cargar hasta tener señal.';if(!NB.logged())return '🔐 Iniciá sesión desde el menú para cargar.';if(!NB.activo())return '⏳ Tu cuenta todavía no fue aprobada.';return '🔒 Solo lectura: entrá en tu turno desde el menú ("En mi turno").'}
 function enq(op,id){S.q=S.q.filter(function(o){return !(o.op===op&&o.id===id)});if(op==='upd'&&S.q.some(function(o){return o.op==='ins'&&o.id===id}))return;S.q.push({op:op,id:id})}
 function delRow(id){if(!id)return;var pend=S.q.some(function(o){return o.op==='ins'&&o.id===id});S.q=S.q.filter(function(o){return o.id!==id});if(!pend)S.q.push({op:'del',id:id});save();flush()}
 function isNet(e){return !!e&&/Failed to fetch|NetworkError|Load failed|network|fetch/i.test(e.message||'')&&!e.code}
 var FLB=false;
+function withTO(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(function(){r({error:{message:'Failed to fetch (timeout)'}})},ms||9000)})])}
+/* sin conexión no se guarda nada en el celular: lo que no llegó al servidor se descarta */
+function dropQueue(){var ids={};S.q.forEach(function(o){if(o.op==='ins')ids[o.id]=1});S.rows=S.rows.filter(function(r){return !ids[r.id]});S.q=[];save()}
 async function flush(){
  if(!CLOUD||FLB||!S.q.length||!NB.sb||!NB.session)return;FLB=true;
  try{while(S.q.length){var o=S.q[0],x=S.rows.filter(function(r){return r.id===o.id})[0],res;
-   if(o.op==='ins'){if(!x){S.q.shift();continue}res=await NB.sb.from('cargas').insert({id:x.id,interno:x.i,comb:x.c,aceite:x.a,urea:x.u,refr:x.r,obs:x.b||'',creado:x.ts});if(res.error&&res.error.code==='23505')res.error=null}
-   else if(o.op==='upd'){if(!x){S.q.shift();continue}res=await NB.sb.from('cargas').update({interno:x.i,comb:x.c,aceite:x.a,urea:x.u,refr:x.r,obs:x.b||''}).eq('id',x.id).select('id');if(!res.error&&!(res.data&&res.data.length))res.error={code:'RLS',message:'sin permiso (¿terminó tu turno?)'}}
-   else{res=await NB.sb.from('cargas').update({borrado:true}).eq('id',o.id).select('id');if(!res.error&&!(res.data&&res.data.length))res.error={code:'RLS',message:'sin permiso (¿terminó tu turno?)'}}
-   if(res.error){if(isNet(res.error)){NB.online=false;break}S.q.shift();
+   if(o.op==='ins'){if(!x){S.q.shift();continue}res=await withTO(NB.sb.from('cargas').insert({id:x.id,interno:x.i,comb:x.c,aceite:x.a,urea:x.u,refr:x.r,obs:x.b||'',creado:x.ts}));if(res.error&&res.error.code==='23505')res.error=null}
+   else if(o.op==='upd'){if(!x){S.q.shift();continue}res=await withTO(NB.sb.from('cargas').update({interno:x.i,comb:x.c,aceite:x.a,urea:x.u,refr:x.r,obs:x.b||''}).eq('id',x.id).select('id'));if(!res.error&&!(res.data&&res.data.length))res.error={code:'RLS',message:'sin permiso (¿terminó tu turno?)'}}
+   else{res=await withTO(NB.sb.from('cargas').update({borrado:true}).eq('id',o.id).select('id'));if(!res.error&&!(res.data&&res.data.length))res.error={code:'RLS',message:'sin permiso (¿terminó tu turno?)'}}
+   if(res.error){if(isNet(res.error)){if(NB.setNet)NB.setNet(false);else NB.online=false;dropQueue();toast('🔴 Sin conexión: no se guardó. Cargalo de nuevo cuando vuelva la señal.',1);pull(true);break}S.q.shift();
     toast('No se pudo guardar'+(x?' el '+x.i:'')+': '+humanErr(res.error.message),1);
     if(o.op==='ins'){S.rows=S.rows.filter(function(r){return r.id!==o.id})}
     save();render();pull(true);continue}
@@ -475,9 +479,10 @@ function mode(){
  var h='',c='mode on ro',w=canWrite();
  if(!NB.logged()){h='🔐 Para ver y cargar el control compartido tenés que iniciar sesión.<br><button id="mLogin">Iniciar sesión</button>'}
  else if(!NB.activo()){h='⏳ Tu cuenta todavía no fue aprobada por un administrador.'}
- else if(w){c='mode on rw';h='🟢 En turno <b>'+NB.turno.turno+'</b> · legajo <b>'+NB.perfil.legajo+'</b>'}
+ else if(!netOK()){h='🔴 Sin conexión: no se puede cargar hasta tener señal.'}
+ else if(w){c='mode';h=''}
  else{h='🔒 Solo lectura. Para cargar, entrá en tu turno desde el menú (<b>En mi turno</b>).'}
- if(NB.logged()&&NB.activo()){if(S.q.length)h+=' · ⏳ '+S.q.length+' sin enviar';if(NB.online===false)h+=' · sin conexión'}
+ 
  m.className=c;m.innerHTML=h;f.classList.toggle('ro',!w);
  if($('mLogin'))$('mLogin').onclick=function(){try{window.parent.postMessage({t:'nube-login'},'*')}catch(e){}}}
 function onState(){
@@ -487,6 +492,8 @@ function onState(){
  if(NB.session&&NB.activo()){subscribe();pull();flush()}else unsubscribe()}
 if(CLOUD){
  $('leg').parentNode.style.display='none';
+ if(S.q.length){var nq=S.q.length;dropQueue();setTimeout(function(){toast('Se descartaron '+nq+' cargas que no habían llegado al servidor.',1)},800)}
+ if(NB.onNet)NB.onNet(function(ok){mode();if(ok){NB.refresh();pull(true)}});
  NB.on(onState);
  window.addEventListener('message',function(e){if(e.data&&e.data.t==='nube-state')NB.refresh().then(function(){pull(true)})});
  window.addEventListener('online',function(){NB.refresh();flush();pull(true)});

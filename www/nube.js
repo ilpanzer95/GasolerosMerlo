@@ -125,6 +125,34 @@
     if (r.error) throw new Error(msgErr(r.error));
   };
 
+  /* ---- conexión: ¿se llega de verdad a la base? (no alcanza con tener wifi) ---- */
+  N.net = navigator.onLine !== false;
+  var netSubs = [], pinging = false;
+  N.onNet = function (fn) { netSubs.push(fn); };
+  N.setNet = function (v) {
+    v = !!v;
+    if (N.net !== v) { N.net = v; N.online = v; netSubs.forEach(function (f) { try { f(v); } catch (e) {} }); }
+  };
+  N.pingNet = async function () {
+    if (!enabled) { N.setNet(navigator.onLine !== false); return N.net; }
+    if (pinging) return N.net;
+    pinging = true;
+    var ok = false, ac = null, t = null;
+    try {
+      ac = (window.AbortController ? new AbortController() : null);
+      t = setTimeout(function () { try { ac && ac.abort(); } catch (e) {} }, 5000);
+      var r = await fetch(URL + '/auth/v1/health', { headers: { apikey: KEY }, cache: 'no-store', signal: ac ? ac.signal : undefined });
+      ok = r.status < 500;
+    } catch (e) { ok = false; }
+    clearTimeout(t); pinging = false;
+    N.setNet(ok);
+    return ok;
+  };
+  setInterval(function () { N.pingNet(); }, 6000);
+  window.addEventListener('online', function () { N.pingNet(); });
+  window.addEventListener('offline', function () { N.setNet(false); });
+  N.pingNet();
+
   window.Nube = N;
   if (enabled) {
     sb.auth.onAuthStateChange(function () { setTimeout(function () { N.refresh(); }, 0); });

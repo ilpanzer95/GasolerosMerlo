@@ -16,6 +16,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 #bar{display:none;padding:6px 8px;background:#12161a}
 #bar button{border:0;border-radius:10px;padding:10px 16px;font-size:16px;font-weight:700;background:#f5c518;color:#12161a}
 #v{flex:1;position:relative;display:none}
+#net{position:fixed;z-index:100;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;display:flex;align-items:center;gap:5px;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;letter-spacing:.02em;border:1px solid #2f6b4a;background:#14231c;color:#7be0a4;pointer-events:none}
+#net i{width:8px;height:8px;border-radius:50%;background:#4cd98a;display:inline-block}
+#net.off{border-color:#7a2f2a;background:#2a1513;color:#ff8f86}#net.off i{background:#ff6b5e}
+.pill.big{font-size:24px;font-weight:800;text-align:center;padding:20px 14px;color:#7be0a4;background:#14231c;border:1px solid #2f6b4a}
+.pill.big.off{color:#ff8f86;background:#2a1513;border-color:#7a2f2a}
 #sig{text-align:center;font-size:12px;color:#5b6573;padding:6px 0 10px;letter-spacing:.04em}
 #menu{overflow-y:auto;justify-content:flex-start}
 #menu>:first-child{margin-top:auto}#menu>:last-child{margin-bottom:auto}
@@ -41,6 +46,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#fff}
 iframe.a{display:block}
 </style></head><body>
+<div id="net" aria-live="polite"><i></i><span>En línea</span></div>
 <div id="bar"><button id="back">‹ Menú</button></div>
 <div id="menu"><h1>Gasoleros Metropol</h1>
  <button class="card" data-k="carga"><span class="ic">📋</span><span><b>Control de carga</b><small>Diario, semanal y Excel</small></span></button>
@@ -51,7 +57,7 @@ iframe.a{display:block}
 </div>
 <div id="v"></div>
 <div class="ov" id="ov"></div>
-<div id="sig">by: Panzer · v3.2</div>
+<div id="sig">by: Panzer · v3.3</div>
 <script src="supabase.js"></script>
 <script src="nube.js"></script>
 <script>
@@ -121,6 +127,11 @@ function afterLogin(){renderAcct();if(N.activo())ensureFrame('carga');notifyFram
 
 function notifyFrames(){var f=document.getElementById('f_carga');if(f&&f.contentWindow)try{f.contentWindow.postMessage({t:'nube-state'},'*')}catch(e){}}
 
+/* indicador "En línea / Sin conexión" arriba a la derecha, en todas las pantallas */
+function netOK(){return N&&N.enabled?N.net!==false:navigator.onLine!==false}
+function paintNet(){var b=$('net');if(!b)return;var ok=netOK();b.className=ok?'':'off';b.lastChild.textContent=ok?'En línea':'Sin conexión'}
+if(N&&N.onNet)N.onNet(function(){paintNet();try{renderAcct()}catch(e){}});
+window.addEventListener('online',paintNet);window.addEventListener('offline',paintNet);paintNet();
 function renderAcct(){
  if(!N||!N.enabled){acct.className='';return}
  acct.className='on';
@@ -128,7 +139,7 @@ function renderAcct(){
  var p=N.perfil;if(!p){acct.innerHTML='<div class="pill">Conectando…</div>';return}
  var h='<div class="pill">Legajo <b>'+esc(p.legajo)+'</b>'+(p.nombre?' · '+esc(p.nombre):'')+(p.rol==='admin'?' · <b>admin</b>':'')+' <a id="lSalir" style="float:right">Salir</a></div>';
  if(!p.activo)h+='<div class="pill">⏳ Tu cuenta está <b>pendiente de aprobación</b>. Cuando un administrador la apruebe vas a poder cargar. <a id="lAct">Actualizar</a></div>';
- else if(N.enTurno())h+='<div class="pill">🟢 En turno <b>'+esc(N.turno.turno)+'</b> hasta las '+hora(N.turno.fin_prog)+'. Lo que cargues queda con tu legajo.</div><button class="tbtn red" id="bFin">Terminar turno</button>';
+ else if(N.enTurno())h+='<div class="pill big'+(N.net===false?' off">🔴 Sin conexión':'">🟢 En línea')+'</div><button class="tbtn red" id="bFin">Terminar turno</button>';
  else{var s=sugerido();h+='<div class="pill">🔒 Solo lectura. Para cargar, entrá en tu turno:</div><div class="rw">'+
   [['TM','06–14'],['TT','14–19'],['TN','19–06']].map(function(t){return '<button class="tbtn'+(t[0]===s?' sug':'')+'" data-t="'+t[0]+'">'+t[0]+'<small>'+t[1]+'</small></button>'}).join('')+'</div>'}
  if(p.activo)h+='<div class="pill" id="quien">En turno ahora: …</div>';
