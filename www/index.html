@@ -57,7 +57,7 @@ iframe.a{display:block}
 </div>
 <div id="v"></div>
 <div class="ov" id="ov"></div>
-<div id="sig">by: Panzer · v3.3</div>
+<div id="sig">by: Panzer · v3.5</div>
 <script src="supabase.js"></script>
 <script src="nube.js"></script>
 <script>
@@ -125,14 +125,17 @@ function showRegistro(){
   try{await N.registrar(l,n,p);closeModal();afterLogin()}catch(e){$('er').textContent=e.message;$('go').disabled=false}};}
 function afterLogin(){renderAcct();if(N.activo())ensureFrame('carga');notifyFrames()}
 
-function notifyFrames(){var f=document.getElementById('f_carga');if(f&&f.contentWindow)try{f.contentWindow.postMessage({t:'nube-state'},'*')}catch(e){}}
+function notifyFrames(){Array.prototype.forEach.call(document.querySelectorAll('iframe'),function(f){try{f.contentWindow.postMessage({t:'nube-state'},'*')}catch(e){}})}
 
 /* indicador "En línea / Sin conexión" arriba a la derecha, en todas las pantallas */
 function netOK(){return N&&N.enabled?N.net!==false:navigator.onLine!==false}
-function paintNet(){var b=$('net');if(!b)return;var ok=netOK();b.className=ok?'':'off';b.lastChild.textContent=ok?'En línea':'Sin conexión'}
-if(N&&N.onNet)N.onNet(function(){paintNet();try{renderAcct()}catch(e){}});
+/* "En línea" = ya empezaste tu turno (y hay conexión con la base) */
+function lineOK(){if(!N||!N.enabled)return navigator.onLine!==false;return !!(N.logged()&&N.activo()&&N.enTurno()&&N.net!==false)}
+function paintNet(){var b=$('net');if(!b)return;var ok=lineOK();b.className=ok?'':'off';b.lastChild.textContent=ok?'En línea':'Fuera de línea'}
+if(N&&N.onNet)N.onNet(function(){paintNet();try{renderAcct()}catch(e){}notifyFrames()});
 window.addEventListener('online',paintNet);window.addEventListener('offline',paintNet);paintNet();
 function renderAcct(){
+ paintNet();
  if(!N||!N.enabled){acct.className='';return}
  acct.className='on';
  if(!N.logged()){acct.innerHTML='<button class="tbtn go" id="bLogin">🔐 Iniciar sesión</button><div class="pill">Para ver y cargar el <b>Control de carga</b> compartido necesitás iniciar sesión.</div>';$('bLogin').onclick=function(){showLogin()};return}
